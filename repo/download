@@ -1,0 +1,5 @@
+__pycache__/
+ftmo_daily_mejoras*.csv
+ftmo_mejoras*.csv
+ftmo_grid.csv
+# senal_log.csv es el registro del forward test: se versiona a proposito
