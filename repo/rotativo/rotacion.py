@@ -1,7 +1,7 @@
 """Rotación TOP3 + filtro de correlación + refugio GLD (port 1:1 de exp5.run(mode='filtro')).
 B: retornos diarios buy&hold por sleeve en calendario de 7 días (0 antes de que exista el activo y en fines de semana de bolsa). existe: DataFrame bool, True desde que el activo cotiza.
 P: DataFrame bool, el sleeve está dentro (tamaño>0).
-lag: 1 = reproduce el backtest; en live se usa la información hasta el cierre t para operar al cierre t+1 (equivale a lag 2 del backtest)."""
+lag: 2 = OPERABLE (señal con datos hasta el cierre t, ejecución al cierre t+1, rinde desde t+2; RSI y correlación con el mismo retraso). lag 1 = backtest original (la señal del cierre t ganaba ese mismo cierre) y NO es operable."""
 import numpy as np, pandas as pd
 RSI_N, RSI_THR, TOP, WIN, THR, REFUGIO = 60, 50, 3, 120, 0.8, "GLD"
 
@@ -41,7 +41,7 @@ def pesos(B, P, existe, lag=1, win=WIN, thr=THR, top=TOP, refugio=REFUGIO, desde
     w = np.zeros(B.shape); ini = 0 if desde is None else idx.searchsorted(pd.Timestamp(desde))
     for t in range(ini, len(idx)):
         if np.isnan(rsv[t]).all(): continue
-        p = Bw.index.searchsorted(idx[t], side="left") - 1          # último laborable estrictamente anterior
+        p = Bw.index.searchsorted(idx[t], side="left") - 1 - (lag - 1)   # último laborable estrictamente anterior al dia de decision (lag 2 = un laborable mas atras)
         C = _corr(Bw, Bw.index[p], win) if p >= 0 else None
         for j in elegir(np.nan_to_num(rsv[t], nan=-1), C, top, thr): w[t, j] = 1.0 / top if P.iloc[t, j] else 0.0
     w = pd.DataFrame(w, index=idx, columns=cols)
