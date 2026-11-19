@@ -1,0 +1,3 @@
+base8            2018-01-01..2026-10-15 CAGR 41.9% Sharpe 1.79 maxDD -21.5% | C0.10 IS pasa 86% quema 0% sinres 13% (n=293, n_ef~11.2) | OOS pasa 91% quema 0% sinres 9% (n=204, n_ef~6.0)
+base8+AMD        2018-01-01..2026-10-15 CAGR 47.8% Sharpe 1.81 maxDD -26.0% | C0.10 IS pasa 87% quema 0% sinres 13% (n=293, n_ef~10.1) | OOS pasa 93% quema 7% sinres 0% (n=204, n_ef~6.4)
+base8+AMD+JNJ    2018-01-01..2026-10-15 CAGR 44.4% Sharpe 1.75 maxDD -26.8% | C0.10 IS pasa 86% quema 0% sinres 14% (n=293, n_ef~9.8) | OOS pasa 98% quema 2% sinres 0% (n=204, n_ef~6.8)

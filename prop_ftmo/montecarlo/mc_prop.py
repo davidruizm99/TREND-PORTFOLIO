@@ -1,4 +1,4 @@
-import numpy as np, pandas as pd, matplotlib, os, json
+import numpy as np, pandas as pd, matplotlib, os, json, hashlib, platform, datetime, sys
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
@@ -12,6 +12,9 @@ EXCL = [int(x) for x in os.environ.get("EXCL","").split(",") if x]
 NREF = int(os.environ.get("NREF","3"))
 OBJ1, OBJ2, DDD, DDM, DMIN = 0.10, 0.05, 0.05, 0.10, 4
 FACT, PAGO, CADA, DFOND = 1.5, 0.80, 30, 365
+LOW_MODE = os.environ.get("LOW_MODE", "max")           # "max" (DEFECTO) = el PEOR de {puente browniano, 1,5 x cierre rojo}: caida tambien en dias verdes sin perder la cola de dias rojos | "puente" solo puente (SUBESTIMA los dias de cola: sube el aprobado 80 -> 96 %) | "factor" = antiguo
+BRAKE_MIN = float(os.environ.get("BRAKE_MIN", "0.0"))  # suelo del freno por drawdown: 0 = llega a 0 en el limite del 10 % (antes 0,25)
+SEED = 20261103
 CUOTA, CUENTA = 540.0, 100_000.0
 NP, NB = 6_000, 3_000                              # trayectorias totales y por lote
 r = pd.read_csv(CSV, index_col=0, parse_dates=True)["ret"]
@@ -38,7 +41,7 @@ def volat(R):
     V = pd.DataFrame(R.T).ewm(span=30, adjust=False).std().shift(1).bfill().values.T * np.sqrt(ANN)
     return V
 
-def sim(R, V, ev, fk):
+def sim(R, V, ev, fk, XI):
     P = R.shape[0]
     stage = np.zeros(P, int); E = np.ones(P); h = np.ones((P, NREF)); dias = np.zeros(P, int)
     ts = np.zeros(P, int); ult = np.zeros(P, int); cob = np.zeros(P); npay = np.zeros(P, int)
@@ -53,7 +56,7 @@ def sim(R, V, ev, fk):
         v = V[:, t]; ref = h.max(1)
         def kC(tau):
             kk = np.where(v > 0, np.minimum(1.0, tau / np.where(v > 0, v, 1)), 0.0)
-            kk = kk * np.minimum(1.0, np.maximum(0.25, (E - (1 - DDM)) / DDM))
+            kk = kk * np.minimum(1.0, np.maximum(BRAKE_MIN, (E - (1 - DDM)) / DDM))
             hueco = E - (ref - DDD); peor = 2.5 * kk * v / np.sqrt(ANN) * E
             sc = np.where((peor > 0) & (hueco - 0.01 < peor), np.maximum(0.0, (hueco - 0.01) / np.where(peor > 0, peor, 1)), 1.0)
             return kk * sc
@@ -62,7 +65,13 @@ def sim(R, V, ev, fk):
         k_f = np.full(P, fk[1]) if fk[0] == "A" else kC(np.full(P, fk[1]))
         k = np.where(fund, k_f, k_ev)
         x = k * R[:, t] - k * COSTE / ANN
-        peor_dia = E * (1 + np.minimum(0.0, x) * FACT)
+        if LOW_MODE == "factor":
+            peor_dia = E * (1 + np.minimum(0.0, x) * FACT)
+        else:                                            # minimo intradia: puente browniano, low = (r - sqrt(r^2 + 2 s^2 xi))/2 <= min(r,0); tambien hay caida los dias verdes
+            sg = np.nan_to_num(v) / np.sqrt(ANN); rt = R[:, t]
+            adv = k * (rt - np.sqrt(rt * rt + 2 * sg * sg * XI[:, t])) / 2
+            if LOW_MODE == "max": adv = np.minimum(adv, FACT * k * np.minimum(rt, 0.0))
+            peor_dia = E * (1 + adv - k * COSTE / ANN)
         En = E * (1 + x)
         bd = act & (peor_dia < ref - DDD)
         bm = act & ~bd & (peor_dia < 1 - DDM)
@@ -84,14 +93,14 @@ def sim(R, V, ev, fk):
         out[fin] = 8; stage[fin] = 3; tend[fin] = t
     return dict(out=out, t1=t1, t2=t2, cob=cob, npay=npay, tfirst=tfirst, tend=tend)
 
-rng = np.random.default_rng(20261103)
+rng = np.random.default_rng(SEED)
 RES = {pl: {ed: [] for ed in EDGES} for pl in PLANES}
 for b in range(NP // NB):
-    R0 = boot(rng, NB)
+    R0 = boot(rng, NB); XI = rng.exponential(1.0, R0.shape)
     for ed, s in EDGES.items():
         R = R0 - (1 - s) * mu; V = volat(R)
         for pl, (ev, fk) in PLANES.items():
-            RES[pl][ed].append(sim(R, V, ev, fk))
+            RES[pl][ed].append(sim(R, V, ev, fk, XI))
     pass
 D = {pl: {ed: {k: np.concatenate([x[k] for x in RES[pl][ed]]) for k in RES[pl][ed][0]} for ed in EDGES} for pl in PLANES}
 
@@ -112,3 +121,11 @@ res.to_csv(OUTF, index=False)
 pd.set_option("display.width", 200)
 print(f"\n{os.path.basename(CSV)}  (pasa_las_2 y quema_eval en %, dias = mediana para pasar las dos fases)")
 print(res[["plan", "edge", "pasa_las_2", "quema_eval", "sin_resolver", "dias_med_las2"]].round(1).to_string(index=False))
+
+with open("run_log.jsonl", "a", encoding="utf-8") as fh:
+    fh.write(json.dumps(dict(utc=datetime.datetime.now(datetime.timezone.utc).isoformat(timespec="seconds"), modo="montecarlo", argv=sys.argv[1:], csv=os.path.basename(CSV),
+        csv_sha256=hashlib.sha256(open(CSV, "rb").read()).hexdigest()[:16], script_sha256=hashlib.sha256(open(__file__, "rb").read()).hexdigest()[:16],
+        python=platform.python_version(), numpy=np.__version__, pandas=pd.__version__, seed=SEED, paths=NP, bloque=BL, cap_dias=CAP, dias_fondeada=DFOND,
+        low_mode=LOW_MODE, brake_min=BRAKE_MIN, factor_intradia=FACT if LOW_MODE == "factor" else None, coste_extra=COSTE, excluye_anios=EXCL, filas_serie=int(n),
+        desde=str(pd.read_csv(CSV, index_col=0, parse_dates=True).index[0].date()), hasta=str(pd.read_csv(CSV, index_col=0, parse_dates=True).index[-1].date()),
+        resultados=OUTF)) + "\n")

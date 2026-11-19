@@ -136,25 +136,27 @@ SLEEVES = {
  "NVDA": dict(ticker="NVDA", cal="LV", vol=0.35, spec="SMA(n=200) OR MACD(f=8,s=200,sig=16,modo=senal)"),
  "AMD":  dict(ticker="AMD", cal="LV", vol=None, spec="EMA3(f=12,m=20,s=80) AND MACD(f=8,s=200,sig=5,modo=senal) AND KELTNER(n=80,m=1.0,atr_n=14)"),
  "GLD":  dict(ticker="GLD", cal="LV", vol=None, spec="EMA3X(f=16,m=120,s=100) OR KELTNER(n=20,m=2.5,atr_n=14)"),
- "QQQ":  dict(ticker="QQQ", cal="LV", vol=None, delay=1, spec="EMA3(f=20,m=80,s=100) OR MACD(f=8,s=26,sig=0,modo=cero)"),
- "SPY":  dict(ticker="SPY", cal="LV", vol=None, delay=1, spec="EMA3(f=20,m=80,s=100) OR MACD(f=8,s=26,sig=0,modo=cero)"),
+ "QQQ":  dict(ticker="QQQ", cal="LV", vol=None, spec="EMA3(f=20,m=80,s=100) OR MACD(f=8,s=26,sig=0,modo=cero)"),
+ "SPY":  dict(ticker="SPY", cal="LV", vol=None, spec="EMA3(f=20,m=80,s=100) OR MACD(f=8,s=26,sig=0,modo=cero)"),
  "JNJ":  dict(ticker="JNJ", cal="LV", vol=None, spec="EMA3X(f=30,m=80,s=65)"),   # candidato #1 del informe JNJ (casi-aprobado: NO supera los filtros de Rick, Sharpe ALL 1.01)
 }
 
-def datos_yahoo(tk, cal):
-    import yfinance as yf
+def datos_yahoo(tk, cal, hoy=None):
+    """OHLC diario de Yahoo SIN la barra de hoy (UTC): es provisional (mercado abierto / dia sin cerrar). La senal se calcula con el cierre de ayer."""
+    import yfinance as yf, datetime as dt
+    hoy = pd.Timestamp(dt.datetime.now(dt.timezone.utc).replace(tzinfo=None)).normalize() if hoy is None else pd.Timestamp(hoy).normalize()
     df = yf.download(tk, start="1999-01-01", auto_adjust=True, progress=False)
     if isinstance(df.columns, pd.MultiIndex): df.columns = df.columns.get_level_values(0)
     df.columns = [c.lower() for c in df.columns]; df = df[["open", "high", "low", "close"]].dropna()
     df.index = pd.to_datetime(df.index).tz_localize(None)
+    df = df[df.index < hoy]
     return df if cal == "7d" else df[df.index.dayofweek < 5]
 
-def estado_sleeve(nombre):
-    """Serie 0/1 (indexada por fecha) del estado del sleeve usado al cierre de cada dia, y la fecha de la ultima barra de precios."""
+def estado_sleeve(nombre, hoy=None):
+    """(tamano objetivo al cierre de cada barra, fecha de la ultima barra). SIN desplazar: el motor aplica el retraso (senal cierre t -> ejecucion t+1 -> rinde desde t+2),
+    el mismo para TODOS los sleeves (QQQ/SPY incluidos). Tamano = 0..1 (ETH/NVDA con objetivo de vol 0,35 en pasos de 0,25), no solo on/off."""
     s = SLEEVES[nombre]
-    df = datos_yahoo(s["ticker"], s["cal"])
+    df = datos_yahoo(s["ticker"], s["cal"], hoy)
     est = estado(df, s["spec"]); anual = 365 if s["cal"] == "7d" else 252
     tam = tamano_objetivo(df, est, s["vol"], anual)
-    delay = s.get("delay", EXEC_DELAY)
-    obj = pd.Series((np.asarray(tam) > 0).astype(float), index=df.index)
-    return obj.shift(delay - 1).dropna(), df.index[-1]
+    return pd.Series(np.asarray(tam, float), index=df.index), df.index[-1]

@@ -33,7 +33,7 @@ LIMITACIONES CONOCIDAS (leer antes de fiarse):
   * Costes de acciones, indices y materias primas = SUPUESTOS. Swap = 7,5%/ano sobre la
     exposicion (centro del 6-9% de Rick). Sustituir por los de la cuenta demo.
 """
-import sys, os, pickle, itertools, warnings, time
+import sys, os, pickle, itertools, warnings, time, json, hashlib, platform, datetime as _dt
 AQUI = os.path.dirname(os.path.abspath(__file__))
 
 def _hallar(*candidatos):
@@ -57,7 +57,8 @@ REFUGIO = "XAUUSD"
 # FTMO 2-Step Swing
 OBJ1, OBJ2, DD_DIA, DD_MAX, DIAS_MIN = 0.10, 0.05, 0.05, 0.10, 4
 FACTOR_INTRADIA, REF_DIAS = 1.5, 3       # igual que el simulador v4
-H_EVAL, PASO, MIN_FUTURO = 900, 5, 365
+H_EVAL, PASO, MIN_FUTURO = 1100, 5, 365   # H_EVAL = CAP del Monte Carlo (3 anos); una ventana dura como mucho eso y SIEMPRE dentro de su tramo (IS u OOS)
+SEED_EVAL = 7                              # semilla del minimo intradia (puente browniano) en el evaluador historico
 K_MAX = 1.0                               # sin apalancar (1:1 en acciones/cripto en Swing)
 K_MAX_CARVER = 3.0                        # cartera Carver pura sin cripto/acciones: indices y materias primas admiten apalancamiento (CONFIRMAR en FTMO)
 SIZINGS = [("A", 0.35), ("A", 0.50), ("C", 0.10), ("C", 0.12), ("C", 0.15)]
@@ -124,16 +125,22 @@ def cargar_condiciones(path=None):
         try: sw = float(r["swap_long_pct_anual"])
         except Exception: sw = np.nan
         # solo cuenta el COSTE: un swap positivo (credito) en la foto del dia se ignora (suele ser ajuste de dividendo/roll)
-        COND[k] = dict(spread_pct=sp, swap_anual=(max(0.0, -sw) / 100.0 if np.isfinite(sw) else SWAP_ANUAL))
+        def _f(c, dflt=np.nan):
+            try: return float(r[c])
+            except Exception: return dflt
+        COND[k] = dict(spread_pct=sp, swap_anual=(max(0.0, -sw) / 100.0 if np.isfinite(sw) else SWAP_ANUAL),
+                       contrato=_f("contract_size"), lote_min=_f("lote_min"), margen_lote_min=_f("margen_lote_min"))
     print(f"Condiciones reales cargadas para {len(COND)} simbolos")
 
-SWAP_CRIPTO = 0.09        # swap anual de cripto a usar. La demo ESTANDAR muestra 30%; Rick dijo 6-9% (cuenta Swing, sin verificar).
-                          # None = usar el de la demo. Se prueba tambien 20% y 30% al final como sensibilidad.
+SWAP_CRIPTO = 0.30        # swap anual de cripto. DEFECTO = 30%, el de la demo (swap_long_pct_anual = -30 en todas las criptos). Cambiar solo si la demo SWING demuestra otra cosa.
+                          # El valor en uso se imprime al empezar y queda en run_log.jsonl.
 def swap_de(sym):
     if CLASE.get(sym) == "cripto" and SWAP_CRIPTO is not None:
         return SWAP_CRIPTO
     return COND[sym]["swap_anual"] if sym in COND else SWAP_ANUAL
 
+USAR_TAMANO = True        # el peso de un sleeve se multiplica por su tamano (ETH/NVDA vol 0,35). False = on/off (solo para comparar con el motor antiguo)
+HASTA = None              # ultima fecha del backtest (se fija a la ultima fecha COMUN de los CSV de sleeves; nunca se extrapolan posiciones)
 # conjuntos de universo que se comparan (decididos antes de ver resultados)
 def conjunto(nombre):
     base = list(UNIVERSO["indices"]) + list(UNIVERSO["metales"]) + list(UNIVERSO["energia"])
@@ -148,27 +155,73 @@ def conjunto(nombre):
     raise ValueError(nombre)
 
 # ============================================================================ DATOS
-def descargar():
-    import yfinance as yf
-    todos = {s: t for d in UNIVERSO.values() for s, t in d.items()}
+SOLAPE_DIAS = 7                           # cada ejecucion vuelve a bajar los ultimos 7 dias de cada serie (Yahoo revisa barras recientes)
+FRESCURA_DIAS = {"cripto": 2, "otros": 5} # dias naturales maximos entre hoy y la ultima barra COMPLETA de un activo (7d vs L-V + festivos)
+MAX_FFILL = {"cripto": 2, "otros": 5}     # dias que se arrastra un precio ausente; pasado el limite el activo deja de ser elegible (NO se inventa un dia "tranquilo")
+
+def _hoy():
+    return pd.Timestamp(_dt.datetime.now(_dt.timezone.utc).replace(tzinfo=None)).normalize()
+
+def _lim(sym):
+    return MAX_FFILL["cripto"] if CLASE.get(sym) == "cripto" else MAX_FFILL["otros"]
+
+def descargar(hoy=None, offline=False):
+    """Descarga INCREMENTAL. Cada ejecucion baja desde (ultima barra de la cache - SOLAPE_DIAS) y SOBREESCRIBE el solape, de modo que la
+    cache no se congela (antes: una columna ya existente no se volvia a bajar nunca). Las series nuevas bajan la historia completa.
+    La barra de HOY (UTC) nunca se guarda: es provisional (mercado abierto / dia sin cerrar). Por eso la senal se calcula por la manana
+    con el cierre de ayer y se ejecuta ese mismo dia (senal al cierre t, ejecucion t+1)."""
+    hoy = _hoy() if hoy is None else pd.Timestamp(hoy).normalize()
+    todos = {s_: t for d in UNIVERSO.values() for s_, t in d.items()}
     px = pickle.load(open(CACHE, "rb")) if os.path.exists(CACHE) else pd.DataFrame()
-    falta = [s for s in todos if s not in px.columns]
-    if falta:
-        print(f"Descargando {len(falta)} series de Yahoo...")
-        tick = {todos[s]: s for s in falta}
-        lista = list(tick)
-        for i in range(0, len(lista), 40):
-            d = yf.download(lista[i:i + 40], start=START, auto_adjust=True, progress=False, group_by="column")["Close"]
-            if isinstance(d, pd.Series): d = d.to_frame(lista[i])
-            d = d.rename(columns=tick)
-            d.index = pd.to_datetime(d.index).tz_localize(None).normalize()
-            d = d[~d.index.duplicated()]
-            px = d if px.empty else px.join(d, how="outer")
+    if len(px): px = px[px.index < hoy]                                    # fuera cualquier fila provisional que quedara guardada
+    if not offline:
+        import yfinance as yf
+        nuevas = [s_ for s_ in todos if s_ not in px.columns]
+        viejas = [s_ for s_ in todos if s_ in px.columns]
+        trabajos = []
+        if viejas:
+            ult = min(px[s_].last_valid_index() for s_ in viejas if px[s_].last_valid_index() is not None)
+            trabajos.append((viejas, (ult - pd.Timedelta(days=SOLAPE_DIAS)).strftime("%Y-%m-%d")))
+        if nuevas: trabajos.append((nuevas, START))
+        for syms, ini in trabajos:
+            print(f"Descargando {len(syms)} series de Yahoo desde {ini}...")
+            tick = {todos[s_]: s_ for s_ in syms}; lista = list(tick); trozos = []
+            for i in range(0, len(lista), 40):
+                d = yf.download(lista[i:i + 40], start=ini, auto_adjust=True, progress=False, group_by="column")["Close"]
+                if isinstance(d, pd.Series): d = d.to_frame(lista[i])
+                d = d.rename(columns=tick)
+                d.index = pd.to_datetime(d.index).tz_localize(None).normalize()
+                d = d[~d.index.duplicated()]
+                trozos.append(d[d.index < hoy])                            # sin la barra de hoy
+            nuevo = pd.concat(trozos, axis=1)
+            if len(px) and ini != START:
+                cols = [c for c in nuevo.columns if c in px.columns]
+                px.loc[px.index >= pd.Timestamp(ini), cols] = np.nan       # el solape se reemplaza entero (no se mezcla con valores viejos)
+                px = nuevo.combine_first(px)
+            else:
+                px = nuevo if px.empty else nuevo.combine_first(px)
+        px = px.sort_index()
         pickle.dump(px, open(CACHE, "wb"))
     px = px[[c for c in px.columns if px[c].notna().sum() > MIN_OBS]]
-    sin = [s for s in todos if s not in px.columns]
+    sin = [s_ for s_ in todos if s_ not in px.columns]
     if sin: print("Sin datos o historia corta (se omiten):", sin)
     return px
+
+def comprobar_frescura(px, activos, hoy=None, estricto=True):
+    """Falla (SystemExit) si algun activo de la cesta no tiene una barra completa reciente. Una caida de datos NO puede parecer un mercado tranquilo."""
+    hoy = _hoy() if hoy is None else pd.Timestamp(hoy).normalize()
+    malos = []
+    for a in activos:
+        if a not in px.columns: malos.append((a, "sin datos")); continue
+        u = px[a].last_valid_index()
+        if u is None: malos.append((a, "sin datos")); continue
+        dias = (hoy - u).days
+        lim = FRESCURA_DIAS["cripto"] if CLASE.get(a) == "cripto" else FRESCURA_DIAS["otros"]
+        if dias > lim: malos.append((a, f"ultima barra {u.date()} ({dias} dias; maximo {lim})"))
+    if malos and estricto:
+        raise SystemExit("\n[PARO] datos desactualizados; NO se calcula ninguna senal:\n" + "\n".join(f"   {a}: {m}" for a, m in malos) +
+                         "\nVuelve a ejecutar cuando haya barra reciente (o revisa la conexion / el ticker).")
+    return malos
 
 def anadir_x3(px):
     """US100x3: posicion US100 con 3x de nocional (sustituye a TQQQ, que FTMO no ofrece). Costes y swap x3."""
@@ -285,14 +338,16 @@ def preparar(px):
     cal = pd.date_range(px.index[0], px.index[-1], freq="D")
     pxc = px.reindex(cal)
     nobs = pxc.notna().cumsum()
+    pxf = pd.DataFrame({c: pxc[c].ffill(limit=_lim(c)) for c in pxc.columns})            # arrastre acotado por clase
     P = dict(
         cal=cal, syms=list(px.columns),
-        ret=pxc.ffill(limit=5).pct_change(fill_method=None).fillna(0.0),
+        ret=pxf.pct_change(fill_method=None).fillna(0.0),                                  # solo se rellena con 0 dentro del limite
         rsi=_propio(pxc, rsi_wilder),
         pos={"ewmac": _propio(pxc, sleeve_ewmac), "sma200": _propio(pxc, sleeve_sma200)},
         fc=_propio(pxc, fc_ewmac),
         vol=_propio(pxc, vol_anual),
-        ok=(nobs >= MIN_OBS) & pxc.ffill(limit=5).notna(),
+        ok=(nobs >= MIN_OBS) & pxf.notna(),
+        bar=pxc.notna(),                                                                   # hubo barra REAL ese dia (para saber si el mercado estaba abierto)
         pxc=pxc,
     )
     wd = cal.dayofweek < 5                                             # para correlaciones: solo L-V
@@ -313,6 +368,7 @@ def rotar(P, syms, estructura="plana", top=3, peso="eq", sleeve="ewmac", cripto_
     OK = P["ok"].values[:, cols]
     FC = np.nan_to_num(P["fc"].values[:, cols])
     RWD = P["ret_wd"][:, cols]
+    BAR = P["bar"].values[:, cols] if "bar" in P else np.ones((len(P["cal"]), len(cols)), bool)    # hubo barra real (mercado abierto)
     clases = np.array([CLASE[s] for s in names])
     costes = np.array([coste(s, CLASE[s]) for s in names])
     swaps = np.array([swap_de(s) for s in names])
@@ -346,12 +402,15 @@ def rotar(P, syms, estructura="plana", top=3, peso="eq", sleeve="ewmac", cripto_
             continue
         rs, ps, ok = RSI[d - 1], POS[d], OK[d]
         eleg = ok & (ps > 0) & (rs > thr) & ~np.isnan(rs)
+        cerrado = (~BAR[d]) & (clases != "cripto")            # mercado cerrado ese dia (fin de semana / festivo): ni se abre ni se cierra
+        bloq = cerrado & (W[d - 1] > 0)                       # posicion que NO se puede tocar hoy
+        eleg &= ~cerrado
         if BLK is not None: eleg &= ~BLK[d]
         if MK is not None and not MK[d - 1]: eleg &= False     # filtro de mercado (QQQ sobre su media de 200), con lag 1
-        if not eleg.any() and ref is None: continue
-        w_end = P["wd_pos"][d]
+        if not eleg.any() and ref is None and not bloq.any(): continue
+        w_end = P["wd_pos"][d - 1]                            # correlacion con datos hasta AYER (antes incluia el retorno de hoy)
         win = RWD[max(0, w_end - CORR_WIN):w_end + 1]
-        elegidos, vacios = [], 0
+        elegidos, vacios = list(np.where(bloq)[0]), 0
         for _, mask, k in grupos:
             cand = np.where(eleg & mask)[0]
             cand = cand[np.argsort(-rs[cand])]
@@ -359,7 +418,7 @@ def rotar(P, syms, estructura="plana", top=3, peso="eq", sleeve="ewmac", cripto_
                 rk = {c: i for i, c in enumerate(cand)}
                 keep = [c for c in cand if W[d - 1][c] > 0 and rk[c] < k + hist]
                 cand = np.array(keep + [c for c in cand if c not in keep], dtype=int)
-            n = 0
+            n = int(sum(1 for e_ in elegidos if mask[e_]))
             for c in cand:
                 if n == k: break
                 if cripto_max is not None and clases[c] == "cripto" and sum(clases[e] == "cripto" for e in elegidos) >= cripto_max:
@@ -370,8 +429,9 @@ def rotar(P, syms, estructura="plana", top=3, peso="eq", sleeve="ewmac", cripto_
                 elegidos.append(c); n += 1
             vacios += k - n
         w = np.zeros(A)
-        if elegidos:
-            el = np.array(elegidos)
+        nuevos = [c for c in elegidos if not bloq[c]]
+        if nuevos:
+            el = np.array(nuevos, dtype=int)
             if peso == "eq":
                 w[el] = 1.0 / slots_tot
             elif peso == "carver":   # la rotacion elige; Carver dimensiona dentro del hueco
@@ -381,8 +441,10 @@ def rotar(P, syms, estructura="plana", top=3, peso="eq", sleeve="ewmac", cripto_
             else:   # inversa de volatilidad, misma exposicion total que eq
                 iv = 1.0 / np.nan_to_num(VOL[d, el], nan=np.nanmedian(VOL[d, el]) if np.isfinite(VOL[d, el]).any() else 0.2)
                 w[el] = iv / iv.sum() * len(el) / slots_tot
-        if vacios and ref is not None and ok[ref] and POS[d, ref] > 0 and w[ref] == 0:
-            w[ref] = vacios / slots_tot
+            if USAR_TAMANO: w[el] *= np.where(POS[d, el] > 0, POS[d, el], 0.0)    # tamano del sleeve (ETH/NVDA 0,25..1): UNA sola matriz de pesos para backtest y vivo
+        if vacios and ref is not None and ok[ref] and POS[d, ref] > 0 and w[ref] == 0 and not bloq[ref]:
+            w[ref] = vacios / slots_tot * (min(POS[d, ref], 1.0) if USAR_TAMANO else 1.0)
+        if bloq.any(): w[bloq] = W[d - 1][bloq]                                    # lo que no se puede tocar se queda como estaba
         W[d] = w
     held = np.vstack([np.zeros(A), W[:-1]])
     bruto = (held * R).sum(1)
@@ -391,6 +453,7 @@ def rotar(P, syms, estructura="plana", top=3, peso="eq", sleeve="ewmac", cripto_
     neto = pd.Series(bruto - tc - swap, index=P["cal"])
     Wdf = pd.DataFrame(W, index=P["cal"], columns=names)
     m = neto.index >= EVAL_START
+    if HASTA is not None: m = m & (neto.index <= HASTA)
     return neto[m], Wdf[m]
 
 # ============================================================================ METRICAS
@@ -400,16 +463,22 @@ def metricas(x):
                 maxdd=(eq / eq.cummax() - 1).min(), vol=x.std() * np.sqrt(ANN), peor_dia=x.min())
 
 # ============================================================================ EVALUADOR FTMO
-def evaluar(r, expo, metodo, par, starts, kmax=K_MAX):
-    """Simula FTMO 2-Step Swing desde cada inicio (vectorizado). Devuelve estado y duracion.
-    estado: 1 pasa ambas fases, 2 rompe diario, 3 rompe maximo, 0 sin resolver."""
+def evaluar(r, expo, metodo, par, starts, kmax=K_MAX, fin=None):
+    """Simula FTMO 2-Step Swing desde cada inicio (vectorizado). estado: 1 pasa ambas fases, 2 rompe diario, 3 rompe maximo, 0 sin resolver.
+    `fin[i]` = indice (exclusivo) donde acaba el tramo de la ventana i: la ventana NUNCA entra en el otro tramo (IS/OOS).
+    Minimo intradia = el PEOR de (a) puente browniano condicionado al cierre, low = (r - sqrt(r^2 + 2 s^2 xi))/2, xi ~ Exp(1) (da caida tambien a los dias verdes) y (b) 1,5 x cierre rojo
+    (el puente solo SUBESTIMA los dias de cola: con el solo el aprobado sube artificialmente del 80 al 96 %).
+    Freno por drawdown y colchon diario llegan a 0 en el limite (antes el freno tenia suelo del 25 %)."""
     T, n = len(r), len(starts)
+    fin = np.full(n, T) if fin is None else np.asarray(fin)
     vd = np.maximum(pd.Series(r).ewm(span=30, min_periods=10).std().shift(1).bfill().values, 0.002)
+    xi = np.random.default_rng(SEED_EVAL).exponential(1.0, T)
+    lowr = np.minimum((r - np.sqrt(r * r + 2 * vd * vd * xi)) / 2, FACTOR_INTRADIA * np.minimum(r, 0))   # el PEOR de {puente, 1,5 x cierre rojo}: el puente solo subestima los dias de cola
     e = np.ones(n); fase = np.ones(n, int); est = np.zeros(n, int); dur = np.full(n, np.nan)
     hist = np.ones((n, REF_DIAS)); dias = np.zeros(n, int)
-    for j in range(H_EVAL):
+    for j in range(min(H_EVAL, int((fin - starts).max()))):
         idx = starts + j
-        act = (est == 0) & (idx < T)
+        act = (est == 0) & (idx < fin)
         if not act.any(): break
         ii = np.minimum(idx, T - 1)
         rr, v = r[ii], vd[ii]
@@ -419,10 +488,10 @@ def evaluar(r, expo, metodo, par, starts, kmax=K_MAX):
         else:
             k = np.minimum(kmax, par / np.sqrt(ANN) / v)
             if metodo == "C":
-                k = k * np.clip((e - (1 - DD_MAX)) / DD_MAX, 0.25, 1.0)
-                k = np.minimum(k, np.maximum(0.01, DD_DIA - (ref - e)) / (2.5 * v))
+                k = k * np.clip((e - (1 - DD_MAX)) / DD_MAX, 0.0, 1.0)
+                k = np.minimum(k, np.maximum(0.0, DD_DIA - (ref - e) - 0.01) / (2.5 * v))
         ret = k * rr
-        low = e * (1 + FACTOR_INTRADIA * np.minimum(ret, 0))
+        low = e * (1 + k * lowr[ii])
         f_d = act & (ref - low >= DD_DIA)
         f_m = act & ~f_d & (low <= 1 - DD_MAX)
         e = np.where(act, e * (1 + ret), e)
@@ -438,17 +507,28 @@ def evaluar(r, expo, metodo, par, starts, kmax=K_MAX):
     return est, dur
 
 def resumen_eval(serie, expo, kmax=K_MAX):
-    r = serie.values; T = len(r)
-    starts = np.arange(0, T - MIN_FUTURO, PASO)
-    is_mask = serie.index[starts] < OOS_START
+    """Tasas de aprobado por tramo. Cada ventana empieza cada PASO dias y esta ENTERA dentro de su tramo (IS: antes de OOS_START; OOS: desde OOS_START),
+    con al menos MIN_FUTURO dias. Se informa por separado aprobadas / quemadas (diario, maximo) / sin terminar. Los inicios cada 5 dias se SOLAPAN:
+    n_ef = dias del tramo / dias medianos de una prueba da el numero de ventanas independientes aproximado."""
+    r = serie.values; T = len(r); ix = serie.index
+    iO = int(ix.searchsorted(OOS_START))
+    tramos = (("IS", np.arange(0, max(iO - MIN_FUTURO, 0), PASO), iO), ("OOS", np.arange(iO, max(T - MIN_FUTURO, iO), PASO), T))
     out = {}
     for m, p in SIZINGS:
-        est, dur = evaluar(r, expo, m, p, starts, kmax)
-        for lab, msk in (("IS", is_mask), ("OOS", ~is_mask)):
-            e_, d_ = est[msk], dur[msk]
-            out[f"{m}{p}_pasa_{lab}"] = (e_ == 1).mean()
-            out[f"{m}{p}_diario_{lab}"] = (e_ == 2).mean()
-            out[f"{m}{p}_dias_{lab}"] = np.nanmedian(d_[e_ == 1]) if (e_ == 1).any() else np.nan
+        for lab, st, fin in tramos:
+            k = f"{m}{p}"
+            if len(st) == 0:
+                for suf in ("pasa", "diario", "maximo", "sinres", "dias", "n", "n_ef"): out[f"{k}_{suf}_{lab}"] = np.nan
+                continue
+            est, dur = evaluar(r, expo, m, p, st, kmax, fin=np.full(len(st), fin))
+            out[f"{k}_pasa_{lab}"] = (est == 1).mean()
+            out[f"{k}_diario_{lab}"] = (est == 2).mean()
+            out[f"{k}_maximo_{lab}"] = (est == 3).mean()
+            out[f"{k}_sinres_{lab}"] = (est == 0).mean()
+            out[f"{k}_dias_{lab}"] = np.nanmedian(dur[est == 1]) if (est == 1).any() else np.nan
+            dm = np.nanmedian(dur) if np.isfinite(dur).any() else np.nan
+            out[f"{k}_n_{lab}"] = len(st)
+            out[f"{k}_n_ef_{lab}"] = (fin - st[0]) / dm if np.isfinite(dm) and dm > 0 else np.nan
     return out
 
 # ============================================================================ SLEEVES DEL NOTEBOOK (--sleeves-csv)
@@ -457,11 +537,13 @@ ALIAS_SLEEVE = {"GLD": "XAUUSD", "QQQ": "US100", "SPY": "US500", "TQQQ": "US100x
 
 FIN_SLEEVE = {}      # ultima fecha de cada CSV de sleeve (para avisar si estan desactualizados)
 
+EXTRA_DELAY = {"US100": 1, "US500": 1}   # QQQ/SPY se exportaron con EXEC_DELAY=1 (la senal del cierre t ganaba ese mismo cierre): un dia mas -> senal cierre t, ejecucion t+1
+
 def cargar_sleeves(carpeta, P, verbose=True):
-    """Lee los *_daily.csv exportados por el notebook del grid. Nombre: <ACTIVO>_<lo-que-sea>.csv (ej. ADAUSD_c2_daily.csv).
-    Usa la columna `position` (0/1, la posicion ya ejecutada del dia t) desplazada -1: la posicion de t+1 se decide con datos
-    hasta t-1 (EXEC_DELAY>=1 en el notebook), asi que al cierre de t ya es conocida -> sin look-ahead.
-    Fines de semana: se arrastra la posicion del viernes. Antes del primer dato del CSV: fuera (0)."""
+    """Lee los *_daily.csv del notebook del grid. Columnas: `size` (tamano ya ejecutado del dia t; si no existe, `position`).
+    POS[d] = tamano ejecutado en la barra siguiente, desplazado 1: la posicion que gana el dia d+1 se decide con datos hasta d-1 (delay 2) -> sin look-ahead.
+    QQQ/SPY: un dia mas (EXTRA_DELAY). La ULTIMA barra de cada CSV NO se usa (su posicion futura no existe: antes se inventaba "mantener").
+    El arrastre de fin de semana/festivo esta acotado (MAX_FFILL); pasado el limite -> 0 y el backtest se corta antes (HASTA)."""
     import glob
     out = {}
     for f in sorted(glob.glob(os.path.join(carpeta, "*.csv"))):
@@ -473,19 +555,32 @@ def cargar_sleeves(carpeta, P, verbose=True):
         if sym not in P["syms"]:
             print(f"  [sleeves] {base}: '{act}' no esta en el universo FTMO/descargado -> se ignora"); continue
         d = pd.read_csv(f, parse_dates=["date"]).set_index("date")
-        col = "position" if "position" in d.columns else "signal_next"
-        sig = (d[col] > 0).astype(float).shift(-1)
-        sig.iloc[-1] = float(d[col].iloc[-1] > 0)               # ultimo dia: mantiene la posicion
-        sig = sig.reindex(P["cal"]).ffill().fillna(0.0)         # calendario 7 dias; antes del CSV = 0
-        out[sym] = sig; FIN_SLEEVE[sym] = d.index[-1]
+        col = "size" if "size" in d.columns else ("position" if "position" in d.columns else "signal_next")
+        tam = d[col].astype(float).clip(lower=0)
+        sig = tam.shift(-1)
+        sig.iloc[-1] = np.nan                                   # sin inventar la ultima posicion
+        if EXTRA_DELAY.get(sym): sig = sig.shift(EXTRA_DELAY[sym])
+        lim = _lim(sym)
+        sig = sig.reindex(P["cal"]).ffill(limit=lim).fillna(0.0)    # calendario 7 dias; antes del CSV o pasado el limite = 0
+        out[sym] = sig
+        FIN_SLEEVE[sym] = d.index[-2] if len(d) > 1 else d.index[-1]     # ultima fecha con posicion conocida
         if verbose:
-            print(f"  [sleeves] {base} -> {sym}: {d.index[0].date()}..{d.index[-1].date()}, en largo {sig[sig.index >= d.index[0]].mean():.0%} del tiempo"
-                  + (f" (alias de {act})" if sym != act else ""))
+            print(f"  [sleeves] {base} -> {sym}: {d.index[0].date()}..{FIN_SLEEVE[sym].date()}, en largo {(sig[sig.index >= d.index[0]] > 0).mean():.0%} del tiempo"
+                  + (f", +{EXTRA_DELAY[sym]} dia de retraso" if EXTRA_DELAY.get(sym) else "") + (f" (alias de {act})" if sym != act else ""))
     return out
+
+def fijar_hasta(syms):
+    """HASTA = ultima fecha COMUN de los sleeves de la cesta (los CSV acaban en dias distintos; mas alla de esa fecha el backtest mezclaria datos y huecos)."""
+    global HASTA
+    fines = [FIN_SLEEVE[s_] for s_ in syms if s_ in FIN_SLEEVE]
+    HASTA = min(fines) if fines else None
+    if HASTA is not None: print(f"  [datos] backtest cortado en {HASTA.date()} = ultima fecha comun de los sleeves de la cesta")
+    return HASTA
 
 def modo_sleeves_csv(P, px, carpeta):
     sl = cargar_sleeves(carpeta, P)
     if not sl: print("No se ha cargado ningun sleeve. Revisa la carpeta y los nombres de fichero."); return
+    fijar_hasta(list(sl))
     base = [s for s in conjunto("replica9") if s in P["syms"]]
     nuevos = [s for s in sl if s not in base]
     P["pos"]["csv"] = P["pos"]["ewmac"].copy()
@@ -647,6 +742,7 @@ def modo_mejoras(P, px, carpeta, top, cap, ref, sint):
     base = [s for s in conjunto("replica9") if s in P["syms"]]
     ref = [r for r in ref if r in sl]
     cesta = base + ref
+    fijar_hasta(cesta)
     P["pos"]["csv"] = P["pos"]["ewmac"].copy()
     for sym, sig in sl.items(): P["pos"]["csv"][sym] = sig.values
     print(f"\nCesta: {cesta}\nConfiguracion: {top} posiciones, tope cripto {cap or 'sin tope'}, sleeves del notebook\n")
@@ -728,60 +824,109 @@ def modo_mejoras(P, px, carpeta, top, cap, ref, sint):
     for n_, x_ in series.items():
         tag = "".join(ch if ch.isalnum() else "_" for ch in n_)[:40]; x_.to_csv(f"ftmo_daily_mejoras{etq}_{tag}.csv", header=["ret"])
     print(f"Escritos ftmo_mejoras{etq}.csv y ftmo_daily_mejoras{etq}_<variante>.csv (para el Monte Carlo)")
+    log_ejecucion("mejoras", px, cesta, carpeta, extra=dict(cesta=cesta, top=top, cap=cap, tag=etq, hasta=str(HASTA.date()) if HASTA is not None else None,
+                  resumen=g[["variante", "sharpe", "cagr", "maxdd", "p10_IS", "p10_OOS"]].round(4).to_dict("records")))
     estudio_inicio(x0, W0, P, cesta)
 
 
 SLEEVE_DE = {"BTCUSD": "BTC", "ETHUSD": "ETH", "SOLUSD": "SOL", "US100": "QQQ", "US500": "SPY", "XAUUSD": "GLD",
              "AAPL": "AAPL", "NVDA": "NVDA", "AMD": "AMD", "JNJ": "JNJ"}      # simbolo FTMO -> nombre del sleeve en sleeves_motor.SLEEVES
 
-def sleeves_vivos(P, syms, sl_csv):
-    """Calcula los sleeves desde los precios (sleeves_motor.py, tus reglas del grid) en lugar de leer los CSV. Para cada sleeve:
-    compara con tu CSV en los dias comunes (debe coincidir ~100 %), y devuelve (senales, ultima_barra). Los que no tienen regla
-    en sleeves_motor.SLEEVES (p. ej. JNJ hasta que pegues su linea) se quedan con el CSV."""
+REF_DEFECTO = ["AMD"]      # JNJ queda FUERA por defecto: su sleeve no supera los filtros del propio grid (Sharpe ALL 1,01 < 1,35; DSR 0,29). Sin AMD (cesta de 8): --ref ""   |   con JNJ: --ref AMD,JNJ
+
+def _sha(path):
+    try: return hashlib.sha256(open(path, "rb").read()).hexdigest()[:16]
+    except Exception: return None
+
+def log_ejecucion(modo, px=None, activos=None, carpeta=None, extra=None, ruta="run_log.jsonl"):
+    """Una linea JSON por ejecucion: fecha, argumentos, version de scripts (sha256), parametros, fechas de datos por activo, huella de los CSV de sleeves y semillas.
+    Con esto cualquier numero publicado se puede reconstruir (o saber por que ya no coincide)."""
+    import glob
+    rec = dict(utc=_dt.datetime.now(_dt.timezone.utc).isoformat(timespec="seconds"), modo=modo, argv=sys.argv[1:],
+               python=platform.python_version(), pandas=pd.__version__, numpy=np.__version__,
+               scripts={n: _sha(os.path.join(AQUI, n)) for n in ("ftmo_rotativo.py", "sleeves_motor.py", "senal_diaria.py", "mc_prop.py")
+                        if os.path.exists(os.path.join(AQUI, n))},
+               params=dict(RSI_N=RSI_N, RSI_THR=RSI_THR, CORR_WIN=CORR_WIN, CORR_THR=CORR_THR, SWAP_CRIPTO=SWAP_CRIPTO, USAR_TAMANO=USAR_TAMANO,
+                           MAX_FFILL=MAX_FFILL, FRESCURA_DIAS=FRESCURA_DIAS, EXTRA_DELAY=EXTRA_DELAY, EVAL_START=EVAL_START, OOS_START=OOS_START,
+                           HASTA=str(HASTA.date()) if HASTA is not None else None, SIZINGS=SIZINGS, H_EVAL=H_EVAL, PASO=PASO, MIN_FUTURO=MIN_FUTURO,
+                           SEED_EVAL=SEED_EVAL, FACTOR_INTRADIA="max(puente browniano, 1.5 x cierre rojo)", REF_DEFECTO=REF_DEFECTO, DD_DIA=DD_DIA, DD_MAX=DD_MAX))
+    if px is not None:
+        cols = [c for c in (activos or px.columns) if c in px.columns]
+        rec["datos"] = {c: dict(primera=str(px[c].first_valid_index().date()), ultima=str(px[c].last_valid_index().date()), n=int(px[c].notna().sum())) for c in cols}
+        rec["huella_precios"] = hashlib.sha256(pd.util.hash_pandas_object(px[cols].round(6), index=True).values.tobytes()).hexdigest()[:16]
+    if carpeta and os.path.isdir(carpeta):
+        rec["sleeves_csv"] = {os.path.basename(g): _sha(g) for g in sorted(glob.glob(os.path.join(carpeta, "*.csv")))}
+    if extra: rec["extra"] = extra
+    with open(ruta, "a", encoding="utf-8") as fh: fh.write(json.dumps(rec, default=str) + "\n")
+    return rec
+
+def sleeves_vivos(P, syms, sl_csv, hoy=None):
+    """Calcula los sleeves desde los precios (sleeves_motor.py, tus reglas del grid) en lugar de leer los CSV. Para cada sleeve compara con tu CSV en los dias
+    comunes (debe coincidir ~100 %) y devuelve (POS, ultima_barra). POS[d] = tamano al cierre de d-1 (retraso uniforme: senal cierre t -> ejecucion t+1).
+    Sin regla en sleeves_motor.SLEEVES -> se usa el CSV; si el CSV esta desactualizado el activo NO entra (ver modo_senal)."""
     import sleeves_motor as sm
     out, fin = {}, {}
-    print("\n--- Sleeves calculados en vivo desde los precios (descarga de Yahoo) ---")
+    print("\n--- Sleeves calculados en vivo desde los precios (Yahoo, sin la barra de hoy) ---")
     for sym in syms:
         nom = SLEEVE_DE.get(sym)
         if nom is None or nom not in sm.SLEEVES:
             print(f"  {sym:7s} sin regla en sleeves_motor.py -> se usa el CSV" + (" (puede estar desactualizado)" if sym in sl_csv else " (NO HAY CSV: queda fuera)"))
             continue
         try:
-            e, ultima = sm.estado_sleeve(nom)
+            tam, ultima = sm.estado_sleeve(nom, hoy)
         except Exception as ex:
             print(f"  {sym:7s} fallo al descargar/calcular ({type(ex).__name__}) -> se usa el CSV"); continue
-        sig = e.reindex(P["cal"]).ffill().fillna(0.0)
+        sig = tam.reindex(P["cal"]).ffill(limit=_lim(sym)).shift(1).fillna(0.0)          # POS[d] = tamano al cierre de d-1
         out[sym] = sig; fin[sym] = ultima
         msg = ""
         if sym in sl_csv:
-            ref = sl_csv[sym]; com = e.index.intersection(ref.index)
-            com = com[(com >= pd.Timestamp("2019-07-01")) & (com <= ref.index[-1] - pd.Timedelta(days=3))]
-            if len(com): 
-                ok = float(np.mean(e.loc[com].values == ref.loc[com].values))
+            ref = sl_csv[sym]; e = tam.shift(1); com = e.index.intersection(ref.index)
+            com = com[(com >= pd.Timestamp("2019-07-01")) & (com <= FIN_SLEEVE.get(sym, ref.index[-1]) - pd.Timedelta(days=3))]
+            if len(com):
+                ok = float(np.mean(np.isclose(e.loc[com].values, ref.loc[com].values, atol=1e-9)))
                 msg = f" | coincide {ok:.2%} con tu CSV en {len(com)} dias" + ("" if ok >= 0.995 else "  <-- REVISA: no reproduce tu CSV")
-        print(f"  {sym:7s} {nom:5s} ultima barra {ultima.date()} | hoy: {'EN LARGO' if sig.iloc[-1] > 0 else 'fuera'}{msg}")
+        print(f"  {sym:7s} {nom:5s} ultima barra {ultima.date()} | tamano de hoy {float(tam.iloc[-1]):.2f}{msg}")
     return out, fin
 
 # ============================================================================ SENAL DIARIA (forward test)
-def modo_senal(P, px, carpeta, top, cap, ref, tau, equity, base, ref3):
-    """Pesos objetivo para MANANA con la cartera de referencia (base 8 + ref, notebook sleeves, RSI(60), pesos iguales),
-    tamano k de la capa de riesgo (objetivo de vol tau + freno por drawdown + colchon diario, igual que el Monte Carlo) y
-    nominal por activo. Guarda senal_log.csv y compara con las senales de dias anteriores (reproducibilidad)."""
+def modo_senal(P, px, carpeta, top, cap, ref, tau, equity, base, ref3, hoy=None):
+    """Pesos objetivo para EJECUTAR HOY con la cesta de referencia (base 8 + ref, RSI(60), pesos iguales x tamano del sleeve), tamano k de la capa de riesgo
+    (objetivo de vol tau + freno por drawdown que llega a 0 + colchon diario, igual que el Monte Carlo) y nominal por activo.
+    CONVENCION UNICA (backtest = vivo): la senal usa SOLO cierres hasta AYER (t); se ejecuta HOY (t+1), en los ultimos minutos antes del cierre; la posicion gana
+    desde hoy al cierre de mañana. P llega con el calendario extendido hasta hoy. Guarda senal_log.csv, snapshots/ y run_log.jsonl."""
     sl = cargar_sleeves(carpeta, P, verbose=False)
     basec = [s_ for s_ in conjunto("replica9") if s_ in P["syms"]]
     ref = [r_ for r_ in ref if r_ in sl or r_ in SLEEVE_DE]
     cesta = basec + ref
+    hoy = _hoy() if hoy is None else pd.Timestamp(hoy).normalize()
+    comprobar_frescura(px, cesta, hoy)                                           # PARO si algun activo de la cesta no tiene barra reciente
+    if equity is not None and ref3 is None:
+        raise SystemExit("\n[PARO] has pasado --equity pero no --ref3. La referencia del limite diario de FTMO es el MAXIMO de las 3 ultimas equity de cierre que "
+                         "ves en el broker: no se asume ningun valor por defecto. Añade --ref3 <numero>.")
     FIN_SLEEVE.clear()
-    for f_ in __import__("glob").glob(os.path.join(carpeta, "*.csv")):       # ultima fecha de cada CSV (para el aviso de desactualizado)
+    for f_ in __import__("glob").glob(os.path.join(carpeta, "*.csv")):           # ultima fecha con posicion conocida de cada CSV
         a_ = os.path.basename(f_).split("_")[0].upper(); a_ = a_[:-4] + "USD" if a_.endswith("-USD") else a_
         sy_ = ALIAS_SLEEVE.get(a_, a_)
-        if sy_ in sl: FIN_SLEEVE[sy_] = pd.read_csv(f_, parse_dates=["date"])["date"].iloc[-1]
+        if sy_ in sl:
+            dcsv = pd.read_csv(f_, parse_dates=["date"])["date"]; FIN_SLEEVE[sy_] = dcsv.iloc[-2] if len(dcsv) > 1 else dcsv.iloc[-1]
+    csv_vivo = {}
     if "--solo-csv" not in sys.argv:
         try:
-            vivos, fin_v = sleeves_vivos(P, cesta, sl)
-            for sy_, sg_ in vivos.items(): sl[sy_] = sg_; FIN_SLEEVE[sy_] = fin_v[sy_]
+            vivos, fin_v = sleeves_vivos(P, cesta, sl, hoy)
+            for sy_, sg_ in vivos.items(): sl[sy_] = sg_; FIN_SLEEVE[sy_] = fin_v[sy_]; csv_vivo[sy_] = True
         except Exception as ex:
             print(f"\n[AVISO] no pude calcular los sleeves en vivo ({type(ex).__name__}: {ex}); se usan los CSV de {carpeta}/")
+    T_dato = P["bar"].any(axis=1)[lambda z: z].index[-1]                          # ultimo dia con alguna barra real
+    ext = P["cal"][P["cal"] > T_dato]
+    if len(ext):
+        nc = [c for c in P["syms"] if CLASE.get(c) != "cripto"]
+        P["bar"].loc[ext, nc] = np.repeat((ext.dayofweek < 5)[:, None], len(nc), axis=1)      # hoy los mercados abren (si es laborable)
+    # sleeves obsoletos: un CSV viejo NO se arrastra; el activo sale de la cartera
+    for sym in list(cesta):
+        fin = FIN_SLEEVE.get(sym)
+        if sym in sl and not csv_vivo.get(sym) and fin is not None and (T_dato - fin).days > MAX_FFILL["otros"]:
+            print(f"  [PARO-ACTIVO] sleeve {sym}: su CSV termina el {fin.date()} ({(T_dato - fin).days} dias antes del ultimo dato) y no hay regla en vivo -> {sym} queda FUERA hoy")
+            sl[sym] = sl[sym] * 0.0
     P["pos"]["csv"] = P["pos"]["ewmac"].copy()
     for sym, sig in sl.items(): P["pos"]["csv"][sym] = sig.values
     for sym in cesta:
@@ -792,16 +937,11 @@ def modo_senal(P, px, carpeta, top, cap, ref, tau, equity, base, ref3):
     w, wp = W.iloc[-1], W.iloc[-2]
     rs = P["rsi"][cesta].iloc[ti - 1]; ps = P["pos"]["csv"][cesta].iloc[ti]; ok = P["ok"][cesta].iloc[ti]
     eleg = ok & (ps > 0) & (rs > RSI_THR) & rs.notna()
-    print(f"\n================ SENAL PARA MANANA  (datos hasta el cierre del {T.date()}) ================")
-    print(f"Cartera: {cesta} | {top} posiciones, tope cripto {cap or 'sin tope'} | RSI({RSI_N}) de AYER, umbral {RSI_THR}, pesos iguales 1/{top}\n")
-    for sym in cesta:
-        fin = FIN_SLEEVE.get(sym)
-        if fin is not None and (T - fin).days > 3:
-            print(f"  [AVISO] sleeve {sym}: su CSV termina el {fin.date()} ({(T - fin).days} dias antes del ultimo dato). "
-                  f"Vuelve a ejecutar el notebook para refrescarlo: se esta usando su ultima posicion conocida.")
+    print(f"\n================ SENAL: datos hasta el cierre del {T_dato.date()}  ->  EJECUTAR HOY {T.date()} (ultimos minutos antes del cierre) ================")
+    print(f"Cartera: {cesta} | {top} posiciones, tope cripto {cap or 'sin tope'} | RSI({RSI_N}) hasta el cierre de {T_dato.date()}, umbral {RSI_THR}, peso = 1/{top} x tamano del sleeve\n")
     filas = []
     for sym in rs.sort_values(ascending=False, na_position="last").index:
-        if w[sym] > 0 and wp[sym] > 0: acc = "MANTENER"
+        if w[sym] > 0 and wp[sym] > 0: acc = "MANTENER" if abs(w[sym] - wp[sym]) < 0.005 else "AJUSTAR"
         elif w[sym] > 0: acc = "ABRIR"
         elif wp[sym] > 0: acc = "CERRAR"
         else: acc = ""
@@ -809,8 +949,8 @@ def modo_senal(P, px, carpeta, top, cap, ref, tau, equity, base, ref3):
         if not eleg[sym]:
             motivo = "sleeve fuera" if ps[sym] <= 0 else ("RSI<=50" if (rs[sym] <= RSI_THR) else "sin datos")
             if w[sym] == 0 and ps[sym] > 0 and rs[sym] > RSI_THR: motivo = "sin datos suficientes"
-        filas.append(dict(activo=sym, sleeve="EN LARGO" if ps[sym] > 0 else "fuera", RSI_ayer=round(float(rs[sym]), 1) if pd.notna(rs[sym]) else np.nan,
-                          elegible="si" if eleg[sym] else "no", peso_manana=round(float(w[sym]), 3), peso_ayer=round(float(wp[sym]), 3), accion=acc, nota=motivo))
+        filas.append(dict(activo=sym, sleeve=f"EN LARGO x{ps[sym]:.2f}" if ps[sym] > 0 else "fuera", RSI=round(float(rs[sym]), 1) if pd.notna(rs[sym]) else np.nan,
+                          elegible="si" if eleg[sym] else "no", peso_objetivo=round(float(w[sym]), 3), peso_actual=round(float(wp[sym]), 3), accion=acc, nota=motivo))
     pd.set_option("display.width", 220)
     print(pd.DataFrame(filas).to_string(index=False))
     if XAU := "XAUUSD":
@@ -820,21 +960,40 @@ def modo_senal(P, px, carpeta, top, cap, ref, tau, equity, base, ref3):
     k_vol = min(1.0, tau / v) if v > 0 else 0.0
     E = (equity / base) if equity else 1.0
     r3 = (ref3 / base) if ref3 else E
-    freno = min(1.0, max(0.25, (E - (1 - 0.10)) / 0.10))
+    freno = min(1.0, max(0.0, (E - (1 - 0.10)) / 0.10))                          # llega a 0 en el limite del 10 %
     kk = k_vol * freno
     hueco = E - (r3 - 0.05); peor = 2.5 * kk * v / np.sqrt(ANN) * E
     colchon = max(0.0, (hueco - 0.01) / peor) if (peor > 0 and hueco - 0.01 < peor) else 1.0
     k = kk * colchon
     print(f"\n--- Tamano (objetivo de vol {tau:.0%}) ---")
     print(f"  vol anual de la cartera a exposicion completa (EWMA 30): {v:.1%}  ->  k por volatilidad = min(1, {tau:.2f}/{v:.2f}) = {k_vol:.2f}")
-    print(f"  equity {E * base:,.0f} sobre base {base:,.0f}  ->  freno por drawdown x{freno:.2f}   | colchon diario x{colchon:.2f}")
+    print(f"  equity {E * base:,.0f} sobre base {base:,.0f}  ->  freno por drawdown x{freno:.2f}   | colchon diario x{colchon:.2f}"
+          + (f"  (ref3 del broker: {ref3:,.0f})" if ref3 else ""))
     print(f"  k FINAL = {k:.2f}  (exposicion total = suma de pesos {w.sum():.2f} x k = {w.sum() * k:.0%} de la cuenta)")
     cap_ = (equity or base)
     print("\n  Nominal objetivo por activo (en la moneda de la cuenta):")
+    nom = {}
     for sym in w.index[w > 0]:
-        print(f"    {sym:8s} {w[sym] * k * cap_:>12,.0f}   ({w[sym] * k:.1%} de la cuenta)")
-    if equity is None: print("  (no has pasado --equity: nominal calculado sobre la base; con --equity y --ref3 se aplican freno y colchon)")
-    # ---- log y reproducibilidad ----
+        nom[sym] = float(w[sym] * k * cap_)
+        print(f"    {sym:8s} {nom[sym]:>12,.0f}   ({w[sym] * k:.1%} de la cuenta)")
+    if equity is None: print("  (no has pasado --equity/--ref3: nominal calculado sobre la base y SIN freno ni colchon)")
+    # ---- lotes y margen (cuenta en USD; las condiciones salen de ftmo_simbolos.csv de TU demo) ----
+    print("\n  Lotes (redondeados HACIA ABAJO al lote minimo) y margen estimado [supone cuenta en USD y precio = ultimo cierre]:")
+    margen = 0.0; lotes = {}
+    for sym in nom:
+        c_ = COND.get(sym, {}); px_u = float(px[sym].dropna().iloc[-1]) if sym in px.columns and px[sym].notna().any() else np.nan
+        if not c_ or not np.isfinite(px_u) or not np.isfinite(c_.get("contrato", np.nan)) or not np.isfinite(c_.get("lote_min", np.nan)):
+            print(f"    {sym:8s} sin datos de contrato en ftmo_simbolos.csv: calcula tu el lote"); continue
+        val_lote = px_u * c_["contrato"]                                    # nominal de 1.00 lote
+        lm = c_["lote_min"]; n_lm = np.floor(nom[sym] / (val_lote * lm) + 1e-9)    # cuantos lotes minimos caben
+        lot = n_lm * lm; lotes[sym] = lot
+        mg = n_lm * c_.get("margen_lote_min", np.nan) if np.isfinite(c_.get("margen_lote_min", np.nan)) else np.nan
+        margen += (0.0 if not np.isfinite(mg) else mg)
+        print(f"    {sym:8s} {lot:>9.2f} lotes  (nominal real {lot * val_lote:>11,.0f} vs objetivo {nom[sym]:>11,.0f}; margen ~{mg:,.0f})")
+    if lotes:
+        pct = margen / cap_
+        print(f"    margen total estimado {margen:,.0f} = {pct:.0%} de la cuenta" + ("   <-- REVISA: mas del 50 % de la cuenta en margen" if pct > 0.5 else ""))
+    # ---- log, foto de entrada y registro de ejecuciones ----
     fila = dict(fecha=str(T.date()), tau=tau, k_vol=round(k_vol, 4), k_final=round(k, 4), equity=equity if equity else "", **{f"w_{s_}": round(float(w[s_]), 4) for s_ in cesta})
     L = pd.read_csv("senal_log.csv") if os.path.exists("senal_log.csv") else pd.DataFrame()
     if len(L):
@@ -843,7 +1002,7 @@ def modo_senal(P, px, carpeta, top, cap, ref, tau, equity, base, ref3):
         for _, r_ in pasadas.iterrows():
             d_ = pd.Timestamp(r_.fecha)
             if d_ in W.index:
-                dd = sum(abs(float(r_.get(f"w_{s_}", 0) or 0) - float(W.loc[d_, s_])) for s_ in cesta) / 2   # fraccion de la cartera que habria cambiado
+                dd = sum(abs(float(r_.get(f"w_{s_}", 0) or 0) - float(W.loc[d_, s_])) for s_ in cesta) / 2
                 difs.append(dd)
         if difs:
             difs = np.array(difs)
@@ -852,8 +1011,19 @@ def modo_senal(P, px, carpeta, top, cap, ref, tau, equity, base, ref3):
             print("  (si hay diferencias: sleeves refrescados, datos revisados o un error al ejecutar la senal; revisa los dias que no coinciden)")
     L = pd.concat([L[L.fecha != fila["fecha"]] if len(L) else L, pd.DataFrame([fila])], ignore_index=True).sort_values("fecha")
     L.to_csv("senal_log.csv", index=False)
-    print(f"\nGuardado senal_log.csv ({len(L)} filas). Ahora: 1) coloca las posiciones en la demo, 2) apunta el equity real al cierre "
-          f"(mañana lo pasas con --equity).")
+    os.makedirs("snapshots", exist_ok=True)
+    snap = pd.DataFrame([dict(fecha_ejecucion=str(T.date()), datos_hasta=str(T_dato.date()), activo=sym,
+                              ultima_barra=str(px[sym].last_valid_index().date()) if sym in px.columns and px[sym].last_valid_index() is not None else "",
+                              ultimo_cierre=float(px[sym].dropna().iloc[-1]) if sym in px.columns and px[sym].notna().any() else np.nan,
+                              rsi=float(rs[sym]) if pd.notna(rs[sym]) else np.nan, tamano_sleeve=float(ps[sym]), elegible=bool(eleg[sym]),
+                              peso_objetivo=float(w[sym]), peso_actual=float(wp[sym]), k_final=float(k), nominal_objetivo=nom.get(sym, 0.0)) for sym in cesta])
+    snap.to_csv(os.path.join("snapshots", f"senal_{T.date()}.csv"), index=False)
+    if not os.path.exists("fills_log.csv"):
+        pd.DataFrame(columns=["fecha_ejecucion", "hora", "activo", "lado", "nominal_ejecutado", "precio_fill", "slippage_vs_cierre_pct", "notas"]).to_csv("fills_log.csv", index=False)
+    log_ejecucion("senal", px, cesta, carpeta, extra=dict(ejecutar=str(T.date()), datos_hasta=str(T_dato.date()), k=k, pesos={s_: float(w[s_]) for s_ in cesta}, ref3=ref3, equity=equity))
+    print(f"\nGuardado: senal_log.csv ({len(L)} filas), snapshots/senal_{T.date()}.csv (foto de los datos de entrada), run_log.jsonl.\n"
+          f"Ahora: 1) coloca las posiciones en la demo (ultimos minutos antes del cierre), 2) apunta CADA ejecucion en fills_log.csv (hora, nominal, precio),\n"
+          f"3) mañana pasa --equity y --ref3 (maximo de las 3 ultimas equity de cierre del broker).")
 
 # ============================================================================ ACTIVO A ACTIVO
 def una_a_una(P, px):
@@ -895,21 +1065,27 @@ def una_a_una(P, px):
 def main(sint=False):
     t0 = time.time()
     cargar_condiciones()
-    px = sinteticos() if sint else descargar()
+    print(f"Swap cripto en uso: {globals()['SWAP_CRIPTO']:.0%} anual | tamanos de sleeve: {'SI' if USAR_TAMANO else 'no (on/off)'} | ffill max cripto/otros: {MAX_FFILL['cripto']}/{MAX_FFILL['otros']} dias")
+    px = sinteticos() if sint else descargar(pd.Timestamp(sys.argv[sys.argv.index("--hoy") + 1]) if "--hoy" in sys.argv else None, offline="--offline" in sys.argv)
     px = anadir_x3(px)
     if "--senal" in sys.argv:
         i = sys.argv.index("--senal")
         carpeta = sys.argv[i + 1] if i + 1 < len(sys.argv) and not sys.argv[i + 1].startswith("--") else _hallar("sleeves", os.path.join(AQUI, "..", "data", "csv_sleeves"), os.path.join(AQUI, "data", "csv_sleeves"))
         def _v(n, d, tipo=float): return tipo(sys.argv[sys.argv.index(n) + 1]) if n in sys.argv else d
-        ref = sys.argv[sys.argv.index("--ref") + 1].split(",") if "--ref" in sys.argv else ["AMD", "JNJ"]
-        modo_senal(preparar(px), px, carpeta, _v("--top", 3, int), _v("--cap", 2, int) or None, [r.strip() for r in ref],
-                   _v("--tau", 0.10), _v("--equity", None), _v("--base", 100000.0), _v("--ref3", None)); return
+        ref = sys.argv[sys.argv.index("--ref") + 1].split(",") if "--ref" in sys.argv else REF_DEFECTO
+        hoy_ = pd.Timestamp(sys.argv[sys.argv.index("--hoy") + 1]).normalize() if "--hoy" in sys.argv else _hoy()
+        u_ = px.index[-1]
+        if (hoy_ - u_).days > 6: raise SystemExit(f"\n[PARO] la ultima barra de toda la tabla es del {u_.date()} y hoy es {hoy_.date()}: datos desactualizados.")
+        fin_ = max(hoy_, u_ + pd.Timedelta(days=1))                                          # dia de EJECUCION (senal con cierres hasta ayer)
+        px_ext = px.reindex(pd.date_range(px.index[0], fin_, freq="D"))
+        modo_senal(preparar(px_ext), px_ext, carpeta, _v("--top", 3, int), _v("--cap", 2, int) or None, [r.strip() for r in ref],
+                   _v("--tau", 0.10), _v("--equity", None), _v("--base", 100000.0), _v("--ref3", None), hoy_); return
     if "--sleeves-csv" in sys.argv:
         i = sys.argv.index("--sleeves-csv")
         carpeta = sys.argv[i + 1] if i + 1 < len(sys.argv) and not sys.argv[i + 1].startswith("--") else _hallar("sleeves", os.path.join(AQUI, "..", "data", "csv_sleeves"), os.path.join(AQUI, "data", "csv_sleeves"))
         if "--mejoras" in sys.argv:
             def _a(n, d): return int(sys.argv[sys.argv.index(n) + 1]) if n in sys.argv else d
-            ref = sys.argv[sys.argv.index("--ref") + 1].split(",") if "--ref" in sys.argv else ["AMD", "JNJ"]
+            ref = sys.argv[sys.argv.index("--ref") + 1].split(",") if "--ref" in sys.argv else REF_DEFECTO
             modo_mejoras(preparar(px), px, carpeta, _a("--top", 3), _a("--cap", 0) or None, [r.strip() for r in ref], sint); return
         modo_sleeves_csv(preparar(px), px, carpeta); return
     if "--una-a-una" in sys.argv:
