@@ -1,0 +1,134 @@
+====================================================================================================
+INFORME · Grid research en batería · BTC-USD
+Generado: 2026-10-26 11:10
+Ventana de trabajo 2018-01-01 -> 2026-10-26 · IS hasta 2023-04-12 · OOS desde 2023-04-13
+Calendario: 7 días (24/7) · anualización 365
+Configuración: TICKER='BTC-USD', DATA_SOURCE='yfinance', START='1999-01-01', EVAL_START='2018-01-01', IS_END='2023-04-12', IS_FRAC=0.6, COST_BPS=10.0, EXEC_DELAY=2, CALENDARIO='auto', RF_ANUAL=0.0, SHARPE_MIN=1.35, WINRATE_MIN=0.5, PF_MIN=2.5, OOS_SHARPE_MIN=1.0, MIN_TRADES_ANO=1.0, MAX_TRADES_ANO=None, MIN_EXPOSICION=0.1, FILTRO_MODO='full', INDICADORES=['EMA3', 'EMA3X', 'SMA', 'MACD', 'HMA', 'EMAX', 'DONCHIAN', 'KELTNER', 'TSMOM', 'RSI'], TAMANOS=[1, 2, 3], LOGICAS=['OR', 'AND'], TOP_K_PARES=40, TOP_K_TRIOS=15, MAX_COMBOS_FAMILIA=1500000, SEMILLA=42, ORDENAR_POR='sharpe_all', N_SHORTLIST=15, NEAR_N=200, FUENTE_CANDIDATO='auto', ENSEMBLES=True, ENS_TOPKS=[None, 10], ENS_UMBRALES=[0.0, 0.25, 0.5], ENS_FORMAS=['fraccional', 'binario'], ENS_PASOS=4, ENS_MAX_FAMILIAS=9, PSA_METRICA='sharpe_IS', POOL_PSA=100, QUITAR_DUPLICADOS=True, DEDUPE_CORR=0.95, BLOQUES_IS=3, BLOQUE_SHARPE_MIN=None, PSA_RATIO=0.7, PSA_MIN_PCT=None, CANDIDATO=[1, 2], EXPORTAR=True, FASE4=True, F4_TOP=5, F4_VOL_OBJ=[None, 0.2, 0.35], F4_VOL_N=20, F4_PASO_TAMANO=0.25, F4_LEV_MAX=1.0, F4_FILTRO_TICKER=None, F4_FILTRO_SMA=[100, 200], VAL_ACTIVAR=True, VAL_CANDIDATOS=None, VAL_PERIODOS='auto', VAL_ACTIVOS=[], VAL_WARMUP=320, VAL_SHARPE_OK=0.7
+GRIDS: {'EMA3': {'f': [5, 8, 12, 16, 20, 30], 'm': [20, 30, 40, 60, 80], 's': [50, 65, 80, 100, 150, 200]}, 'EMA3X': {'f': [5, 8, 12, 16, 20, 30], 'm': [50, 80, 100, 120, 150, 200], 's': [65, 100, 130, 160, 200]}, 'SMA': {'n': [50, 65, 80, 100, 120, 150, 180, 200, 250]}, 'MACD': {'f': [8, 12, 16, 20, 40], 's': [21, 26, 35, 50, 80, 120, 200, 300], 'sig': [5, 9, 12, 16], 'modos': ['cero', 'senal']}, 'HMA': {'n': [50, 80, 100, 150, 200, 250], 'banda': [0.0, 0.0025, 0.005]}, 'EMAX': {'f': [10, 20, 30, 50], 's': [50, 80, 100, 150, 200]}, 'DONCHIAN': {'n_in': [20, 40, 55, 100, 150], 'n_out': [10, 20, 40, 55]}, 'KELTNER': {'n': [20, 30, 50, 80], 'm': [1.0, 1.5, 2.0, 2.5], 'atr_n': [14]}, 'TSMOM': {'n': [21, 42, 63, 126, 189, 252]}, 'RSI': {'n': [14, 30, 60, 100], 'umbral': [50, 55, 60]}}
+====================================================================================================
+
+Calendario: 7 días (24/7) · 365 barras/año en los datos · Sharpe anualizado con 365  [OJO: el portfolio trabaja en L-V; para exportar a él usa CALENDARIO='LV']
+BTC-USD: 2014-09-17 -> 2026-10-26 (4423 barras)
+Ventana de trabajo: 2018-01-01 -> 2026-10-26  |  IS hasta 2023-04-12 (1928 barras)  |  OOS desde 2023-04-13 (1293 barras)
+Buy & hold  ->  IS: Sharpe 0.57 CAGR 15.4% MaxDD -81.5%  |  OOS: Sharpe 0.83 CAGR 31.9% MaxDD -53.1%  |  ALL: Sharpe 0.63 CAGR 21.8% MaxDD -81.5%
+EMA3        138 configuraciones
+EMA3X       168 configuraciones
+SMA           9 configuraciones
+MACD        185 configuraciones
+HMA          18 configuraciones
+EMAX         19 configuraciones
+DONCHIAN     20 configuraciones
+KELTNER      16 configuraciones
+TSMOM         6 configuraciones
+RSI          12 configuraciones
+Señales calculadas en 0.8s
+Verificación EMA3(f=5,m=20,s=50): Sharpe motor 0.8470 vs pandas 0.8470
+Mejor configuración de cada indicador por Sharpe IS (solo):
+                            params  sharpe_IS  sharpe_OOS  sharpe_ALL  cagr_ALL  maxdd_ALL  expo_IS  ntr_ALL
+               RSI(n=30,umbral=55)      1.423       0.802       1.208     0.453     -0.296    0.321       71
+            EMA3X(f=5,m=150,s=100)      1.337       0.586       1.064     0.450     -0.584    0.430       34
+      KELTNER(n=50,m=2.5,atr_n=14)      1.332       0.888       1.174     0.435     -0.367    0.350       25
+               EMA3(f=5,m=40,s=65)      1.295       0.875       1.144     0.446     -0.353    0.350       36
+              HMA(n=250,banda=0.0)      1.187       0.865       1.067     0.449     -0.582    0.587       70
+                        SMA(n=120)      1.140       0.743       0.999     0.405     -0.597    0.468       38
+MACD(f=40,s=120,sig=16,modo=senal)      1.114       1.030       1.065     0.441     -0.498    0.564       36
+       DONCHIAN(n_in=150,n_out=10)      1.098       0.785       0.985     0.279     -0.413    0.178       18
+                   EMAX(f=20,s=80)      0.973       0.735       0.885     0.338     -0.604    0.467       17
+                       TSMOM(n=21)      0.843       0.759       0.804     0.289     -0.663    0.519      153
+  pares: 41,998 pruebas en 12s
+  trios: 541,836 pruebas en 202s
+  ensembles: 12,264 pruebas en 3s
+
+Pruebas totales (para el DSR): 596,689   ·   tiempo 217s   ·   candidatos tras el primer corte: 2,301
+EMBUDO DE FILTROS
+  pruebas totales                                      596,689
+  pasan Sharpe (alguna lectura) y OOS > 1               2,301
+  ... y win rate >= 50% y PF >= 2.5, lectura FULL            158
+  ... y win rate >= 50% y PF >= 2.5, lectura IS            2,161
+  pasan con FILTRO_MODO='full'                             158
+SHORTLIST: 158 combinaciones pasan los filtros; agrupadas por familia (corr > 0.95) se muestran 15 ('n_similares' = cuántas otras, peores, caen en su familia)
+
+                                                                                       combinacion  sharpe_IS  sharpe_OOS  sharpe_ALL  cagr_ALL  maxdd_ALL  wr_IS   pf_IS  wr_ALL  pf_ALL  ntr_IS  ntr_ALL  tr_ano  expo_IS  expo_ALL  dsr_is  dsr_is_cons       sh_bloques  psa_pct  sh_vec_medio  n_similares  pasa_full  pasa_is
+1                                 EMA3X(f=5,m=150,s=100) AND HMA(n=250,banda=0.0) AND TSMOM(n=126)      1.727       1.050       1.476     0.497     -0.254  0.667  84.728   0.561  15.441    12.0     41.0   4.651    0.196     0.247   0.970        0.194  1.0 / 2.5 / 1.4    0.667         1.424           10       True     True
+2               EMA3(f=5,m=40,s=65) AND MACD(f=16,s=21,sig=16,modo=senal) AND HMA(n=250,banda=0.0)      1.582       1.180       1.431     0.434     -0.267  0.583   9.369   0.532   6.148    24.0     47.0   5.331    0.171     0.182   0.938        0.108  1.6 / 2.0 / 1.0    1.000         1.518           45       True     True
+3                         EMA3X(f=5,m=200,s=100) AND KELTNER(n=50,m=1.5,atr_n=14) AND TSMOM(n=126)      1.623       1.100       1.429     0.481     -0.254  0.750  24.740   0.517  12.183     8.0     29.0   3.290    0.192     0.257   0.948        0.131  1.2 / 2.4 / 0.9    0.700         1.308            1       True     True
+4                  EMA3X(f=5,m=200,s=65) AND HMA(n=150,banda=0.0) AND KELTNER(n=50,m=2.5,atr_n=14)      1.548       1.183       1.411     0.434     -0.244  0.714   9.422   0.619   6.699    21.0     42.0   4.764    0.208     0.241   0.922        0.097  1.0 / 2.2 / 1.1    1.000         1.408            9       True     True
+5                  EMA3X(f=8,m=200,s=65) AND HMA(n=250,banda=0.0) AND KELTNER(n=80,m=1.5,atr_n=14)      1.573       1.138       1.410     0.481     -0.263  0.647  18.582   0.525  10.098    17.0     40.0   4.537    0.223     0.281   0.931        0.110  0.8 / 2.3 / 1.3    0.889         1.421           42       True     True
+6                                  EMA3X(f=5,m=200,s=100) AND TSMOM(n=126) AND RSI(n=30,umbral=55)      1.632       1.015       1.406     0.455     -0.258  0.615  41.829   0.512  10.411    13.0     43.0   4.878    0.186     0.237   0.952        0.133  1.6 / 2.1 / 1.0    0.600         1.264            0       True     True
+7    EMA3X(f=8,m=200,s=65) AND MACD(f=40,s=300,sig=12,modo=senal) AND KELTNER(n=50,m=2.5,atr_n=14)      1.591       1.037       1.384     0.451     -0.254  0.750  22.447   0.583  12.366    12.0     24.0   2.722    0.231     0.274   0.936        0.118  1.0 / 2.4 / 0.9    0.909         1.411            5       True     True
+8                  EMA3(f=8,m=30,s=80) AND EMA3X(f=5,m=200,s=100) AND KELTNER(n=50,m=2.5,atr_n=14)      1.579       1.022       1.375     0.449     -0.290  0.778  52.429   0.600  16.282     9.0     20.0   2.269    0.207     0.257   0.933        0.112  1.9 / 2.3 / 0.3    0.846         1.365            4       True     True
+9                   EMA3X(f=5,m=150,s=100) AND MACD(f=40,s=120,sig=16,modo=senal) AND TSMOM(n=126)      1.579       1.025       1.374     0.422     -0.254  0.833  21.716   0.562   9.252    12.0     32.0   3.630    0.178     0.220   0.936        0.108  1.0 / 2.4 / 0.8    0.636         1.275            1       True     True
+10                                    EMA3(f=5,m=40,s=65) AND EMA3X(f=5,m=200,s=100) AND SMA(n=50)      1.560       1.039       1.368     0.484     -0.269  0.750  18.716   0.611   9.846    16.0     36.0   4.084    0.225     0.298   0.924        0.106  1.5 / 2.4 / 0.5    0.800         1.373            2       True     True
+11                      EMA3(f=8,m=40,s=65) AND MACD(f=16,s=21,sig=16,modo=senal) AND TSMOM(n=126)      1.441       1.280       1.366     0.419     -0.370  0.619   5.825   0.575   5.506    21.0     40.0   4.537    0.166     0.190   0.875        0.061  1.3 / 1.8 / 1.2    0.917         1.348            3       True     True
+12                                    EMA3(f=5,m=40,s=65) AND EMA3X(f=16,m=200,s=65) AND SMA(n=50)      1.550       1.062       1.364     0.455     -0.269  0.733  28.878   0.600  11.060    15.0     35.0   3.970    0.198     0.278   0.923        0.099  0.9 / 2.5 / 0.7    0.900         1.399            1       True     True
+13                       EMA3(f=5,m=40,s=65) AND EMA3X(f=5,m=150,s=100) AND HMA(n=150,banda=0.005)      1.559       1.040       1.362     0.414     -0.262  0.765   9.930   0.615   6.221    17.0     39.0   4.424    0.182     0.234   0.928        0.101  0.7 / 2.3 / 1.2    0.846         1.412            1       True     True
+14  EMA3X(f=5,m=150,s=100) AND MACD(f=40,s=120,sig=16,modo=senal) AND KELTNER(n=50,m=2.5,atr_n=14)      1.538       1.048       1.357     0.421     -0.254  0.714  13.369   0.593   8.199    14.0     27.0   3.063    0.208     0.242   0.920        0.093  1.0 / 2.4 / 0.9    0.833         1.321            0       True     True
+15              EMA3X(f=5,m=200,s=100) AND HMA(n=150,banda=0.005) AND KELTNER(n=50,m=2.5,atr_n=14)      1.465       1.170       1.355     0.424     -0.269  0.789   9.276   0.649   6.889    19.0     37.0   4.197    0.206     0.242   0.888        0.068  1.4 / 2.1 / 0.7    0.800         1.287            0       True     True
+
+CASI-APROBADOS: las 15 mejores por Sharpe IS aunque NO pasen los filtros (columna 'falla' = qué filtro incumple):
+
+                                                                                      combinacion  sharpe_IS  sharpe_OOS  sharpe_ALL  cagr_ALL  maxdd_ALL  wr_IS    pf_IS  wr_ALL  pf_ALL  ntr_IS  ntr_ALL  tr_ano  expo_IS  expo_ALL  dsr_is       sh_bloques  psa_pct  sh_vec_medio  n_similares                        falla
+1                                EMA3X(f=5,m=150,s=100) AND HMA(n=250,banda=0.0) AND TSMOM(n=126)      1.727       1.050       1.476     0.497     -0.254  0.667   84.728   0.561  15.441    12.0     41.0   4.651    0.196     0.247   0.970  1.0 / 2.5 / 1.4    0.667         1.424           33                         pasa
+2                              EMA3X(f=5,m=200,s=100) AND HMA(n=200,banda=0.005) AND TSMOM(n=126)      1.697       0.984       1.439     0.477     -0.271  0.529   16.151   0.477   8.253    17.0     44.0   4.991    0.183     0.234   0.967  1.8 / 2.3 / 0.8    0.667         1.404            5  WR ALL 48%<50%; OOS 0.98<=1
+3              EMA3(f=5,m=40,s=65) AND MACD(f=16,s=21,sig=16,modo=senal) AND HMA(n=250,banda=0.0)      1.582       1.180       1.431     0.434     -0.267  0.583    9.369   0.532   6.148    24.0     47.0   5.331    0.171     0.182   0.938  1.6 / 2.0 / 1.0    1.000         1.518          274                         pasa
+4                        EMA3X(f=5,m=200,s=100) AND KELTNER(n=50,m=2.5,atr_n=14) AND TSMOM(n=126)      1.691       0.987       1.430     0.456     -0.257  0.857  313.663   0.591  19.718     7.0     22.0   2.495    0.184     0.233   0.965  1.9 / 2.3 / 0.7    0.556         1.329            9                  OOS 0.99<=1
+5                                    EMA3(f=5,m=40,s=65) AND EMA3X(f=5,m=150,s=100) AND SMA(n=50)      1.734       0.930       1.429     0.497     -0.269  0.786   41.598   0.600  11.372    14.0     35.0   3.970    0.216     0.296   0.970  1.0 / 2.6 / 1.3    0.818         1.522          249                  OOS 0.93<=1
+6                        EMA3X(f=5,m=200,s=100) AND KELTNER(n=50,m=1.5,atr_n=14) AND TSMOM(n=126)      1.623       1.100       1.429     0.481     -0.254  0.750   24.740   0.517  12.183     8.0     29.0   3.290    0.192     0.257   0.948  1.2 / 2.4 / 0.9    0.700         1.308            6                         pasa
+7                EMA3X(f=5,m=150,s=100) AND HMA(n=250,banda=0.0) AND KELTNER(n=80,m=1.0,atr_n=14)      1.655       1.031       1.425     0.502     -0.342  0.579   15.184   0.489   8.881    19.0     45.0   5.104    0.237     0.292   0.954  0.5 / 2.6 / 1.4    0.778         1.439           53               WR ALL 49%<50%
+8                 EMA3X(f=5,m=200,s=65) AND HMA(n=150,banda=0.0) AND KELTNER(n=50,m=2.5,atr_n=14)      1.548       1.183       1.411     0.434     -0.244  0.714    9.422   0.619   6.699    21.0     42.0   4.764    0.208     0.241   0.922  1.0 / 2.2 / 1.1    1.000         1.408           15                         pasa
+9                                 EMA3X(f=5,m=200,s=100) AND TSMOM(n=126) AND RSI(n=30,umbral=55)      1.632       1.015       1.406     0.455     -0.258  0.615   41.829   0.512  10.411    13.0     43.0   4.878    0.186     0.237   0.952  1.6 / 2.1 / 1.0    0.600         1.264           10                         pasa
+10                      EMA3(f=5,m=40,s=65) AND EMA3X(f=5,m=150,s=100) AND HMA(n=200,banda=0.005)      1.740       0.837       1.402     0.457     -0.287  0.647   22.292   0.568   8.545    17.0     37.0   4.197    0.196     0.252   0.973  1.3 / 2.4 / 1.4    0.846         1.561          117                  OOS 0.84<=1
+11  EMA3X(f=8,m=200,s=65) AND MACD(f=40,s=300,sig=12,modo=senal) AND KELTNER(n=50,m=2.5,atr_n=14)      1.591       1.037       1.384     0.451     -0.254  0.750   22.447   0.583  12.366    12.0     24.0   2.722    0.231     0.274   0.936  1.0 / 2.4 / 0.9    0.909         1.411           76                         pasa
+12                            EMA3X(f=5,m=200,s=100) AND HMA(n=250,banda=0.0) AND EMAX(f=10,s=50)      1.547       1.092       1.381     0.509     -0.319  0.556   16.060   0.465   8.249    18.0     43.0   4.878    0.255     0.311   0.919  1.1 / 2.5 / 0.8    0.750         1.387           14               WR ALL 47%<50%
+13                 EMA3X(f=5,m=150,s=100) AND MACD(f=40,s=120,sig=16,modo=senal) AND TSMOM(n=126)      1.579       1.025       1.374     0.422     -0.254  0.833   21.716   0.562   9.252    12.0     32.0   3.630    0.178     0.220   0.936  1.0 / 2.4 / 0.8    0.636         1.275            2                         pasa
+14                            ENSEMBLE[EMA3+EMA3X+MACD+KELTNER+RSI] · binario · top10 · voto>=0.5      1.535       1.089       1.373     0.589     -0.356  0.542   10.037   0.489   7.459    24.0     47.0   5.331    0.369     0.414   0.908  1.1 / 2.1 / 1.4      NaN         1.535           53               WR ALL 49%<50%
+15                                   EMA3(f=5,m=40,s=65) AND EMA3X(f=5,m=200,s=100) AND SMA(n=50)      1.560       1.039       1.368     0.484     -0.269  0.750   18.716   0.611   9.846    16.0     36.0   4.084    0.225     0.298   0.924  1.5 / 2.4 / 0.5    0.800         1.373           58                         pasa
+Robustez (solo informativa): 'sh_bloques' = Sharpe del IS en 3 tramos seguidos; 'psa_pct' = fracción de vecinos de parámetros (un paso) que conservan >= 70% del Sharpe IS.
+
+Buy & hold de referencia: IS: Sharpe 0.57 | OOS: Sharpe 0.83 | ALL: Sharpe 0.63
+DSR: con 596,689 pruebas, un DSR < 0,95 indica que el Sharpe IS es compatible con haber elegido el máximo entre muchas pruebas. 'dsr_is' usa la varianza observada; 'dsr_is_cons' es la cota dura (pruebas independientes).
+Origen: shortlist (supera los filtros)
+EMA3X(f=5,m=150,s=100) AND HMA(n=250,banda=0.0) AND TSMOM(n=126)
+Sharpe IS 1.73 · OOS 1.05 · total 1.48 | WR IS 67% · PF IS 84.7 | CAGR 49.7% · MaxDD -25.4%
+41 operaciones · mejor 333.1% · peor -9.6% · Sharpe total sin la mejor operación: 1.10 (con ella: 1.48)
+Exportado en resultados_grid/BTC-USD_20261026_1106/: BTC-USD_c1_daily.csv y BTC-USD_c1_contexto.txt
+Origen: shortlist (supera los filtros)
+EMA3(f=5,m=40,s=65) AND MACD(f=16,s=21,sig=16,modo=senal) AND HMA(n=250,banda=0.0)
+Sharpe IS 1.58 · OOS 1.18 · total 1.43 | WR IS 58% · PF IS 9.4 | CAGR 43.4% · MaxDD -26.7%
+47 operaciones · mejor 54.4% · peor -9.6% · Sharpe total sin la mejor operación: 1.31 (con ella: 1.43)
+Exportado en resultados_grid/BTC-USD_20261026_1106/: BTC-USD_c2_daily.csv y BTC-USD_c2_contexto.txt
+FASE 4: 15 variantes = 5 candidatos base x capas (vol sizing, redondeo, filtro). Sirve para ver si una capa mejora la ROBUSTEZ del sistema, no para repetir la búsqueda.
+Sharpe total de las 15 variantes: mediana 1.41 · p10 1.31 · p90 1.47 · máximo 1.48   (buy & hold: 0.63)
+Sharpe OOS: mediana 1.11   ·   variantes con Sharpe IS >= 1.35 y OOS > 1: 13   ·   pasan los filtros completos: full 11 / is 13
+
+Las 15 mejores (ordenadas por sharpe_ALL):
+
+                                                                                           variante  sharpe_IS  sharpe_OOS  sharpe_ALL  cagr_ALL  maxdd_ALL  expo_IS  expo_ALL  tr_ano  giro_ano  wr_ALL  pf_ALL  dsr_is  pasa_full  pasa_is
+1         #1 EMA3X(f=5,m=150,s=100) AND HMA(n=250,banda=0.0) AND TSMOM(n=126) | vol 0.35 | filtro -      1.852       1.062       1.481     0.313     -0.165    0.109     0.171   4.651     8.989   0.585   9.866     1.0       True     True
+2            #1 EMA3X(f=5,m=150,s=100) AND HMA(n=250,banda=0.0) AND TSMOM(n=126) | vol - | filtro -      1.727       1.050       1.476     0.497     -0.254    0.196     0.247   4.651     9.188   0.561  15.441     1.0       True     True
+3   #3 EMA3X(f=5,m=200,s=100) AND KELTNER(n=50,m=1.5,atr_n=14) AND TSMOM(n=12 | vol 0.35 | filtro -      1.744       1.108       1.460     0.318     -0.165    0.110     0.181   3.290     6.948   0.517   9.370     1.0       True     True
+4   #2 EMA3(f=5,m=40,s=65) AND MACD(f=16,s=21,sig=16,modo=senal) AND HMA(n=25 | vol 0.35 | filtro -      1.610       1.174       1.444     0.286     -0.157    0.097     0.125   5.331     8.961   0.532   5.225     1.0       True     True
+5      #2 EMA3(f=5,m=40,s=65) AND MACD(f=16,s=21,sig=16,modo=senal) AND HMA(n=25 | vol - | filtro -      1.582       1.180       1.431     0.434     -0.267    0.171     0.182   5.331    10.663   0.532   6.148     1.0       True     True
+6      #3 EMA3X(f=5,m=200,s=100) AND KELTNER(n=50,m=1.5,atr_n=14) AND TSMOM(n=12 | vol - | filtro -      1.623       1.100       1.429     0.481     -0.254    0.192     0.257   3.290     6.692   0.517  12.183     1.0       True     True
+7      #4 EMA3X(f=5,m=200,s=65) AND HMA(n=150,banda=0.0) AND KELTNER(n=50,m=2.5, | vol - | filtro -      1.548       1.183       1.411     0.434     -0.244    0.208     0.241   4.764     9.528   0.619   6.699     1.0       True     True
+8      #5 EMA3X(f=8,m=200,s=65) AND HMA(n=250,banda=0.0) AND KELTNER(n=80,m=1.5, | vol - | filtro -      1.573       1.138       1.410     0.481     -0.263    0.223     0.281   4.537     8.961   0.525  10.098     1.0       True     True
+9   #4 EMA3X(f=5,m=200,s=65) AND HMA(n=150,banda=0.0) AND KELTNER(n=50,m=2.5, | vol 0.35 | filtro -      1.619       1.150       1.408     0.290     -0.235    0.126     0.170   4.764     8.394   0.619   5.820     1.0       True     True
+10   #2 EMA3(f=5,m=40,s=65) AND MACD(f=16,s=21,sig=16,modo=senal) AND HMA(n=25 | vol 0.2 | filtro -      1.515       1.201       1.397     0.170     -0.083    0.056     0.074   5.331     5.842   0.553   5.501     1.0       True     True
+11  #5 EMA3X(f=8,m=200,s=65) AND HMA(n=250,banda=0.0) AND KELTNER(n=80,m=1.5, | vol 0.35 | filtro -      1.627       1.151       1.396     0.305     -0.185    0.127     0.198   4.537     8.706   0.550   6.928     1.0       True     True
+12         #1 EMA3X(f=5,m=150,s=100) AND HMA(n=250,banda=0.0) AND TSMOM(n=126) | vol 0.2 | filtro -      1.636       0.982       1.359     0.179     -0.104    0.062     0.102   4.651     6.097   0.585   8.651     1.0      False    False
+13   #4 EMA3X(f=5,m=200,s=65) AND HMA(n=150,banda=0.0) AND KELTNER(n=50,m=2.5, | vol 0.2 | filtro -      1.490       1.077       1.324     0.169     -0.150    0.074     0.102   4.764     5.558   0.595   5.538     1.0      False     True
+14   #5 EMA3X(f=8,m=200,s=65) AND HMA(n=250,banda=0.0) AND KELTNER(n=80,m=1.5, | vol 0.2 | filtro -      1.477       1.077       1.304     0.177     -0.120    0.074     0.119   4.537     5.870   0.525   6.633     1.0      False     True
+15   #3 EMA3X(f=5,m=200,s=100) AND KELTNER(n=50,m=1.5,atr_n=14) AND TSMOM(n=12 | vol 0.2 | filtro -      1.505       0.951       1.275     0.170     -0.116    0.064     0.110   3.290     4.963   0.517   7.052     1.0      False    False
+
+'expo' = tamaño medio (0-1); 'giro_ano' = suma anual de cambios de tamaño (coste); el DSR usa solo el nº de variantes, así que es mucho más benévolo que el de la búsqueda grande: lee primero la mediana.
+Exportado en resultados_grid/BTC-USD_20261026_1106/: BTC-USD_f4_daily.csv y BTC-USD_f4_contexto.txt (variante 1: #1 EMA3X(f=5,m=150,s=100) AND HMA(n=250,banda=0.0) AND TSMOM(n=126) | vol 0.35 | filtro -)
+[control] #1 EMA3X(f=5,m=150,s=100) AND HMA(n=250,banda=0.0) AND TSMOM(n=: Sharpe total recalculado 1.476 vs búsqueda 1.476
+[control] #2 EMA3(f=5,m=40,s=65) AND MACD(f=16,s=21,sig=16,modo=senal) AN: Sharpe total recalculado 1.431 vs búsqueda 1.431
+
+VALIDACIÓN CONGELADA (mismos parámetros, mismos costes y ejecución; 'bh_' = buy & hold del mismo tramo):
+
+                                                         candidato                          donde   anos  sharpe  bh_sharpe   cagr  bh_cagr  maxdd  bh_maxdd   expo  ops  ops_ano     wr      pf veredicto
+0  #1 EMA3X(f=5,m=150,s=100) AND HMA(n=250,banda=0.0) AND TSMOM(n=  BTC-USD 2015-08-03→2017-12-31  2.412   1.925      2.558  1.614    4.066 -0.382    -0.355  0.532   21    8.706  0.571  12.439  mantiene
+1  #2 EMA3(f=5,m=40,s=65) AND MACD(f=16,s=21,sig=16,modo=senal) AN  BTC-USD 2015-08-03→2017-12-31  2.412   2.131      2.558  1.627    4.066 -0.299    -0.355  0.372   25   10.365  0.560   7.828  mantiene
+
+Cómo leerlo: estos datos no entraron en ninguna elección, así que aquí no hay sesgo de selección. Con pocas operaciones el resultado es ruidoso; lo que importa es que el Sharpe se mantenga claramente positivo y que el drawdown sea menor que el del buy & hold, no que iguale el del backtest.

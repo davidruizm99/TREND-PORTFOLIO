@@ -1,0 +1,135 @@
+====================================================================================================
+INFORME · Grid research en batería · AAPL
+Generado: 2026-10-26 20:34
+Ventana de trabajo 2018-01-02 -> 2026-10-26 · IS hasta 2023-04-12 · OOS desde 2023-04-13
+Calendario: L-V · anualización 252
+Configuración: TICKER='AAPL', DATA_SOURCE='yfinance', START='1999-01-01', EVAL_START='2018-01-01', IS_END='2023-04-12', IS_FRAC=0.6, COST_BPS=10.0, EXEC_DELAY=2, CALENDARIO='auto', RF_ANUAL=0.0, SHARPE_MIN=1.35, WINRATE_MIN=0.5, PF_MIN=2.5, OOS_SHARPE_MIN=1.0, MIN_TRADES_ANO=1.0, MAX_TRADES_ANO=None, MIN_EXPOSICION=0.1, FILTRO_MODO='full', INDICADORES=['EMA3', 'EMA3X', 'SMA', 'MACD', 'HMA', 'EMAX', 'DONCHIAN', 'KELTNER', 'TSMOM', 'RSI'], TAMANOS=[1, 2, 3], LOGICAS=['OR', 'AND'], TOP_K_PARES=40, TOP_K_TRIOS=15, MAX_COMBOS_FAMILIA=1500000, SEMILLA=42, ORDENAR_POR='sharpe_is', N_SHORTLIST=15, NEAR_N=200, FUENTE_CANDIDATO='auto', ENSEMBLES=True, ENS_TOPKS=[None, 10], ENS_UMBRALES=[0.0, 0.25, 0.5], ENS_FORMAS=['fraccional', 'binario'], ENS_PASOS=4, ENS_MAX_FAMILIAS=9, PSA_METRICA='sharpe_IS', POOL_PSA=100, QUITAR_DUPLICADOS=True, DEDUPE_CORR=0.95, BLOQUES_IS=3, BLOQUE_SHARPE_MIN=None, PSA_RATIO=0.7, PSA_MIN_PCT=None, CANDIDATO=[1, 2], EXPORTAR=True, FASE4=True, F4_TOP=5, F4_VOL_OBJ=[None, 0.2, 0.35], F4_VOL_N=20, F4_PASO_TAMANO=0.25, F4_LEV_MAX=1.0, F4_FILTRO_TICKER=None, F4_FILTRO_SMA=[100, 200], VAL_ACTIVAR=True, VAL_CANDIDATOS=None, VAL_MANUAL=[], VAL_PERIODOS='auto', VAL_ACTIVOS=[], VAL_ACTIVOS_TRAMO=None, VAL_WARMUP=320, VAL_CAPTURA_MIN=0.5, VAL_DD_EVITADO_MIN=0.3, VAL_SHARPE_OK=0.7
+GRIDS: {'EMA3': {'f': [5, 8, 12, 16, 20, 30], 'm': [20, 30, 40, 60, 80], 's': [50, 65, 80, 100, 150, 200]}, 'EMA3X': {'f': [5, 8, 12, 16, 20, 30], 'm': [50, 80, 100, 120, 150, 200], 's': [65, 100, 130, 160, 200]}, 'SMA': {'n': [50, 65, 80, 100, 120, 150, 180, 200, 250]}, 'MACD': {'f': [8, 12, 16, 20, 40], 's': [21, 26, 35, 50, 80, 120, 200, 300], 'sig': [5, 9, 12, 16], 'modos': ['cero', 'senal']}, 'HMA': {'n': [50, 80, 100, 150, 200, 250], 'banda': [0.0, 0.0025, 0.005]}, 'EMAX': {'f': [10, 20, 30, 50], 's': [50, 80, 100, 150, 200]}, 'DONCHIAN': {'n_in': [20, 40, 55, 100, 150], 'n_out': [10, 20, 40, 55]}, 'KELTNER': {'n': [20, 30, 50, 80], 'm': [1.0, 1.5, 2.0, 2.5], 'atr_n': [14]}, 'TSMOM': {'n': [21, 42, 63, 126, 189, 252]}, 'RSI': {'n': [14, 30, 60, 100], 'umbral': [50, 55, 60]}}
+====================================================================================================
+
+Calendario: L-V · 252 barras/año en los datos · Sharpe anualizado con 252
+AAPL: 1999-01-04 -> 2026-10-26 (6996 barras)
+Ventana de trabajo: 2018-01-02 -> 2026-10-26  |  IS hasta 2023-04-12 (1328 barras)  |  OOS desde 2023-04-13 (888 barras)
+Buy & hold  ->  IS: Sharpe 0.96 CAGR 30.0% MaxDD -38.5%  |  OOS: Sharpe 0.99 CAGR 24.7% MaxDD -33.4%  |  ALL: Sharpe 0.96 CAGR 27.8% MaxDD -38.5%
+EMA3        138 configuraciones
+EMA3X       168 configuraciones
+SMA           9 configuraciones
+MACD        185 configuraciones
+HMA          18 configuraciones
+EMAX         19 configuraciones
+DONCHIAN     20 configuraciones
+KELTNER      16 configuraciones
+TSMOM         6 configuraciones
+RSI          12 configuraciones
+Señales calculadas en 1.1s
+Verificación EMA3(f=5,m=20,s=50): Sharpe motor 0.9000 vs pandas 0.9000
+Mejor configuración de cada indicador por Sharpe IS (solo):
+                           params  sharpe_IS  sharpe_OOS  sharpe_ALL  cagr_ALL  maxdd_ALL  expo_IS  ntr_ALL
+          EMA3X(f=16,m=150,s=130)      1.392       1.043       1.248     0.308     -0.336    0.815       12
+MACD(f=12,s=50,sig=12,modo=senal)      1.387      -0.035       0.845     0.151     -0.390    0.543       69
+              RSI(n=14,umbral=50)      1.360       0.359       1.003     0.194     -0.254    0.651      102
+           HMA(n=150,banda=0.005)      1.203       0.749       1.035     0.192     -0.305    0.593       81
+     KELTNER(n=30,m=1.0,atr_n=14)      1.202       0.525       0.961     0.175     -0.236    0.580       49
+             EMA3(f=5,m=30,s=150)      1.164       0.510       0.927     0.170     -0.236    0.584       40
+                      TSMOM(n=42)      1.015       0.913       0.975     0.197     -0.274    0.656       69
+                        SMA(n=50)      0.993       0.414       0.785     0.147     -0.294    0.675       73
+       DONCHIAN(n_in=20,n_out=10)      0.989       0.425       0.784     0.132     -0.248    0.535       34
+                  EMAX(f=20,s=50)      0.855       0.878       0.857     0.181     -0.277    0.702       20
+  pares: 41,998 pruebas en 8s
+  trios: 541,836 pruebas en 136s
+  ensembles: 12,264 pruebas en 3s
+
+Pruebas totales (para el DSR): 596,689   ·   tiempo 147s   ·   candidatos tras el primer corte: 829
+EMBUDO DE FILTROS
+  pruebas totales                                      596,689
+  pasan Sharpe (alguna lectura) y OOS > 1                 829
+  ... y win rate >= 50% y PF >= 2.5, lectura FULL             11
+  ... y win rate >= 50% y PF >= 2.5, lectura IS              829
+  pasan con FILTRO_MODO='full'                              11
+SHORTLIST: 11 combinaciones pasan los filtros; agrupadas por familia (corr > 0.95) se muestran 8 ('n_similares' = cuántas otras, peores, caen en su familia)
+
+                                                                              combinacion  sharpe_IS  sharpe_OOS  sharpe_ALL  cagr_ALL  maxdd_ALL  wr_IS   pf_IS  wr_ALL  pf_ALL  ntr_IS  ntr_ALL  tr_ano  expo_IS  expo_ALL  dsr_is  dsr_is_cons       sh_bloques  psa_pct  sh_vec_medio  n_similares  pasa_full  pasa_is
+1                              EMA3X(f=5,m=200,s=160) AND MACD(f=8,s=21,sig=9,modo=senal)      1.700       1.013       1.459     0.228     -0.119  0.625   5.310   0.603   4.191    48.0     73.0   8.283    0.426     0.380   0.920        0.194  1.1 / 2.4 / 1.4    1.000         1.462            0       True     True
+2                             EMA3X(f=5,m=200,s=160) AND MACD(f=16,s=35,sig=9,modo=senal)      1.623       1.029       1.412     0.234     -0.245  0.605   4.980   0.561   4.582    38.0     57.0   6.468    0.474     0.420   0.887        0.152  1.4 / 2.2 / 1.2    1.000         1.533            1       True     True
+3                             EMA3X(f=5,m=200,s=160) AND MACD(f=20,s=35,sig=5,modo=senal)      1.621       1.000       1.401     0.228     -0.208  0.610   4.344   0.574   3.972    41.0     61.0   6.921    0.470     0.417   0.887        0.150  1.1 / 2.5 / 1.0    1.000         1.496            0       True     True
+4                            EMA3X(f=20,m=150,s=130) AND MACD(f=16,s=26,sig=9,modo=senal)      1.609       1.013       1.392     0.236     -0.151  0.697   5.613   0.644   4.892    33.0     59.0   6.695    0.425     0.403   0.884        0.141  1.3 / 2.3 / 1.2    1.000         1.478            0       True     True
+5                            EMA3X(f=20,m=150,s=130) AND MACD(f=16,s=35,sig=9,modo=senal)      1.593       1.025       1.386     0.238     -0.245  0.613   5.687   0.585   4.833    31.0     53.0   6.014    0.431     0.409   0.874        0.136  1.4 / 2.1 / 1.3    1.000         1.481            0       True     True
+6  EMA3X(f=20,m=150,s=130) AND MACD(f=16,s=35,sig=9,modo=senal) AND HMA(n=50,banda=0.005)      1.587       1.046       1.391     0.222     -0.190  0.609   4.068   0.590   3.545    46.0     83.0   9.418    0.392     0.369   0.874        0.130  1.5 / 2.4 / 0.9    1.000         1.468            1       True     True
+7                                       EMA3X(f=20,m=150,s=130) AND HMA(n=50,banda=0.005)      1.567       1.123       1.405     0.242     -0.195  0.557   3.414   0.570   3.266    61.0    100.0  11.347    0.456     0.425   0.865        0.121  1.3 / 2.4 / 0.9    0.875         1.345            1       True     True
+8                                  EMA3X(f=30,m=150,s=100) OR DONCHIAN(n_in=100,n_out=10)      1.376       1.370       1.358     0.326     -0.204  0.909  31.982   0.833  23.822    11.0     18.0   2.042    0.745     0.691   0.744        0.054  0.9 / 2.0 / 1.1    0.875         1.280            0       True     True
+
+CASI-APROBADOS: las 15 mejores por Sharpe IS aunque NO pasen los filtros (columna 'falla' = qué filtro incumple):
+
+                                                                                 combinacion  sharpe_IS  sharpe_OOS  sharpe_ALL  cagr_ALL  maxdd_ALL  wr_IS  pf_IS  wr_ALL  pf_ALL  ntr_IS  ntr_ALL  tr_ano  expo_IS  expo_ALL  dsr_is       sh_bloques  psa_pct  sh_vec_medio  n_similares                              falla
+1   EMA3X(f=16,m=150,s=130) AND MACD(f=8,s=35,sig=16,modo=senal) AND HMA(n=100,banda=0.0025)      1.823       0.697       1.451     0.230     -0.157  0.629  5.994   0.588   4.840    35.0     51.0   5.787    0.439     0.354   0.954  1.7 / 2.5 / 1.3    1.000         1.643           80                        OOS 0.70<=1
+2   EMA3X(f=20,m=150,s=130) AND MACD(f=8,s=35,sig=16,modo=senal) AND HMA(n=100,banda=0.0025)      1.743       0.874       1.428     0.235     -0.157  0.667  6.541   0.607   4.623    30.0     56.0   6.354    0.397     0.377   0.933  1.4 / 2.5 / 1.3    1.000         1.583           35                        OOS 0.87<=1
+3                               EMA3X(f=16,m=150,s=130) AND MACD(f=16,s=35,sig=9,modo=senal)      1.736       0.806       1.427     0.238     -0.245  0.611  5.831   0.612   5.029    36.0     49.0   5.560    0.482     0.384   0.930  1.9 / 2.1 / 1.3    0.917         1.552           28                        OOS 0.81<=1
+4                                EMA3X(f=16,m=150,s=130) AND MACD(f=8,s=21,sig=9,modo=senal)      1.723       0.726       1.399     0.217     -0.155  0.609  5.839   0.576   3.998    46.0     66.0   7.489    0.434     0.340   0.928  1.1 / 2.3 / 1.6    1.000         1.492            3                        OOS 0.73<=1
+5                                EMA3X(f=20,m=150,s=130) AND MACD(f=8,s=21,sig=9,modo=senal)      1.722       0.854       1.420     0.227     -0.155  0.667  7.004   0.588   4.199    39.0     68.0   7.716    0.390     0.363   0.928  1.1 / 2.3 / 1.6    0.900         1.473            0                        OOS 0.85<=1
+6                               EMA3X(f=16,m=150,s=130) AND MACD(f=16,s=26,sig=9,modo=senal)      1.721       0.921       1.450     0.238     -0.151  0.684  5.551   0.685   5.088    38.0     54.0   6.127    0.474     0.376   0.928  1.7 / 2.3 / 1.2    1.000         1.548            7                        OOS 0.92<=1
+7                                 EMA3X(f=5,m=200,s=160) AND MACD(f=8,s=21,sig=9,modo=senal)      1.700       1.013       1.459     0.228     -0.119  0.625  5.310   0.603   4.191    48.0     73.0   8.283    0.426     0.380   0.920  1.1 / 2.4 / 1.4    1.000         1.462            1                               pasa
+8                                EMA3X(f=16,m=150,s=130) AND MACD(f=8,s=50,sig=9,modo=senal)      1.698       0.556       1.333     0.216     -0.154  0.619  5.421   0.586   4.015    42.0     58.0   6.581    0.482     0.380   0.920  1.5 / 2.5 / 1.0    0.909         1.500            6  Sharpe ALL 1.33<1.35; OOS 0.56<=1
+9        EMA3X(f=16,m=150,s=130) AND HMA(n=200,banda=0.005) AND KELTNER(n=30,m=1.5,atr_n=14)      1.689       0.113       1.224     0.186     -0.176  0.579  9.222   0.581   5.907    19.0     31.0   3.517    0.448     0.346   0.914  1.4 / 2.2 / 1.3    0.846         1.486           31  Sharpe ALL 1.22<1.35; OOS 0.11<=1
+10       EMA3X(f=16,m=150,s=130) AND HMA(n=150,banda=0.005) AND KELTNER(n=50,m=1.5,atr_n=14)      1.687       0.092       1.210     0.184     -0.170  0.613  7.771   0.605   4.857    31.0     43.0   4.879    0.482     0.372   0.914  1.3 / 2.3 / 1.3    0.846         1.481           82  Sharpe ALL 1.21<1.35; OOS 0.09<=1
+11         EMA3X(f=20,m=150,s=130) AND HMA(n=200,banda=0.0) AND KELTNER(n=30,m=1.5,atr_n=14)      1.676       0.230       1.187     0.179     -0.180  0.571  9.528   0.514   5.032    21.0     37.0   4.198    0.377     0.336   0.909  1.0 / 2.4 / 1.3    0.846         1.441            6  Sharpe ALL 1.19<1.35; OOS 0.23<=1
+12       EMA3X(f=20,m=150,s=130) AND HMA(n=150,banda=0.005) AND KELTNER(n=50,m=1.5,atr_n=14)      1.674       0.276       1.202     0.187     -0.188  0.600  8.138   0.578   4.390    25.0     45.0   5.106    0.413     0.370   0.909  1.3 / 2.3 / 1.3    0.846         1.442           42  Sharpe ALL 1.20<1.35; OOS 0.28<=1
+13       EMA3X(f=16,m=150,s=130) AND HMA(n=150,banda=0.005) AND KELTNER(n=30,m=1.0,atr_n=14)      1.668       0.402       1.280     0.201     -0.181  0.543  5.710   0.553   4.566    35.0     47.0   5.333    0.490     0.377   0.907  1.6 / 2.2 / 1.1    0.833         1.466           28  Sharpe ALL 1.28<1.35; OOS 0.40<=1
+14                               EMA3X(f=20,m=200,s=160) AND MACD(f=8,s=21,sig=9,modo=senal)      1.666       0.977       1.423     0.211     -0.119  0.684  6.411   0.623   4.634    38.0     61.0   6.921    0.355     0.329   0.907  1.0 / 2.5 / 1.1    0.750         1.400            2                        OOS 0.98<=1
+15    EMA3X(f=16,m=150,s=130) AND MACD(f=8,s=35,sig=16,modo=senal) AND HMA(n=50,banda=0.005)      1.664       0.898       1.405     0.217     -0.211  0.633  4.243   0.614   3.802    49.0     70.0   7.943    0.443     0.352   0.907  1.8 / 2.3 / 0.9    1.000         1.519           16                        OOS 0.90<=1
+Robustez (solo informativa): 'sh_bloques' = Sharpe del IS en 3 tramos seguidos; 'psa_pct' = fracción de vecinos de parámetros (un paso) que conservan >= 70% del Sharpe IS.
+
+Buy & hold de referencia: IS: Sharpe 0.96 | OOS: Sharpe 0.99 | ALL: Sharpe 0.96
+DSR: con 596,689 pruebas, un DSR < 0,95 indica que el Sharpe IS es compatible con haber elegido el máximo entre muchas pruebas. 'dsr_is' usa la varianza observada; 'dsr_is_cons' es la cota dura (pruebas independientes).
+Origen: shortlist (supera los filtros)
+EMA3X(f=5,m=200,s=160) AND MACD(f=8,s=21,sig=9,modo=senal)
+Sharpe IS 1.70 · OOS 1.01 · total 1.46 | WR IS 62% · PF IS 5.3 | CAGR 22.8% · MaxDD -11.9%
+73 operaciones · mejor 19.2% · peor -10.1% · Sharpe total sin la mejor operación: 1.36 (con ella: 1.46)
+Exportado en resultados_grid/AAPL_20261026_2031/: AAPL_c1_daily.csv y AAPL_c1_contexto.txt
+Origen: shortlist (supera los filtros)
+EMA3X(f=5,m=200,s=160) AND MACD(f=16,s=35,sig=9,modo=senal)
+Sharpe IS 1.62 · OOS 1.03 · total 1.41 | WR IS 61% · PF IS 5.0 | CAGR 23.4% · MaxDD -24.5%
+57 operaciones · mejor 39.6% · peor -7.1% · Sharpe total sin la mejor operación: 1.22 (con ella: 1.41)
+Exportado en resultados_grid/AAPL_20261026_2031/: AAPL_c2_daily.csv y AAPL_c2_contexto.txt
+FASE 4: 15 variantes = 5 candidatos base x capas (vol sizing, redondeo, filtro). Sirve para ver si una capa mejora la ROBUSTEZ del sistema, no para repetir la búsqueda.
+Sharpe total de las 15 variantes: mediana 1.43 · p10 1.39 · p90 1.48 · máximo 1.49   (buy & hold: 0.96)
+Sharpe OOS: mediana 1.01   ·   variantes con Sharpe IS >= 1.35 y OOS > 1: 12   ·   pasan los filtros completos: full 12 / is 12
+
+Las 15 mejores (ordenadas por sharpe_IS):
+
+                                                                                 variante  sharpe_IS  sharpe_OOS  sharpe_ALL  cagr_ALL  maxdd_ALL  expo_IS  expo_ALL  tr_ano  giro_ano  wr_ALL  pf_ALL  dsr_is  pasa_full  pasa_is
+1    #5 EMA3X(f=20,m=150,s=130) AND MACD(f=16,s=35,sig=9,modo=senal) | vol 0.2 | filtro -      1.812       0.966       1.490     0.194     -0.133    0.328     0.322   6.014    10.723   0.585   5.123     1.0      False    False
+2      #1 EMA3X(f=5,m=200,s=160) AND MACD(f=8,s=21,sig=9,modo=senal) | vol 0.2 | filtro -      1.774       0.980       1.485     0.172     -0.085    0.322     0.298   8.283    14.410   0.575   4.174     1.0      False    False
+3    #4 EMA3X(f=20,m=150,s=130) AND MACD(f=16,s=26,sig=9,modo=senal) | vol 0.2 | filtro -      1.767       1.007       1.475     0.187     -0.110    0.317     0.313   6.695    12.141   0.610   4.980     1.0       True     True
+4     #2 EMA3X(f=5,m=200,s=160) AND MACD(f=16,s=35,sig=9,modo=senal) | vol 0.2 | filtro -      1.711       0.971       1.441     0.187     -0.133    0.369     0.339   6.468    11.630   0.561   4.510     1.0      False    False
+5        #1 EMA3X(f=5,m=200,s=160) AND MACD(f=8,s=21,sig=9,modo=senal) | vol - | filtro -      1.700       1.013       1.459     0.228     -0.119    0.426     0.380   8.283    16.453   0.603   4.191     1.0       True     True
+6     #1 EMA3X(f=5,m=200,s=160) AND MACD(f=8,s=21,sig=9,modo=senal) | vol 0.35 | filtro -      1.679       1.013       1.442     0.215     -0.121    0.410     0.371   8.283    16.509   0.603   4.067     1.0       True     True
+7     #3 EMA3X(f=5,m=200,s=160) AND MACD(f=20,s=35,sig=5,modo=senal) | vol 0.2 | filtro -      1.675       1.010       1.429     0.181     -0.110    0.366     0.336   6.921    12.368   0.541   3.984     1.0       True     True
+8   #5 EMA3X(f=20,m=150,s=130) AND MACD(f=16,s=35,sig=9,modo=senal) | vol 0.35 | filtro -      1.673       1.026       1.434     0.237     -0.229    0.414     0.398   6.014    11.857   0.585   5.125     1.0       True     True
+9   #4 EMA3X(f=20,m=150,s=130) AND MACD(f=16,s=26,sig=9,modo=senal) | vol 0.35 | filtro -      1.637       1.014       1.406     0.229     -0.136    0.407     0.391   6.695    13.332   0.644   4.987     1.0       True     True
+10   #2 EMA3X(f=5,m=200,s=160) AND MACD(f=16,s=35,sig=9,modo=senal) | vol 0.35 | filtro -      1.634       1.029       1.417     0.225     -0.229    0.458     0.411   6.468    12.765   0.561   4.542     1.0       True     True
+11      #2 EMA3X(f=5,m=200,s=160) AND MACD(f=16,s=35,sig=9,modo=senal) | vol - | filtro -      1.623       1.029       1.412     0.234     -0.245    0.474     0.420   6.468    12.822   0.561   4.582     1.0       True     True
+12      #3 EMA3X(f=5,m=200,s=160) AND MACD(f=20,s=35,sig=5,modo=senal) | vol - | filtro -      1.621       1.000       1.401     0.228     -0.208    0.470     0.417   6.921    13.729   0.574   3.972     1.0       True     True
+13     #4 EMA3X(f=20,m=150,s=130) AND MACD(f=16,s=26,sig=9,modo=senal) | vol - | filtro -      1.609       1.013       1.392     0.236     -0.151    0.425     0.403   6.695    13.276   0.644   4.892     1.0       True     True
+14   #3 EMA3X(f=5,m=200,s=160) AND MACD(f=20,s=35,sig=5,modo=senal) | vol 0.35 | filtro -      1.598       1.000       1.383     0.215     -0.207    0.455     0.408   6.921    13.673   0.574   3.869     1.0       True     True
+15     #5 EMA3X(f=20,m=150,s=130) AND MACD(f=16,s=35,sig=9,modo=senal) | vol - | filtro -      1.593       1.025       1.386     0.238     -0.245    0.431     0.409   6.014    11.914   0.585   4.833     1.0       True     True
+
+'expo' = tamaño medio (0-1); 'giro_ano' = suma anual de cambios de tamaño (coste); el DSR usa solo el nº de variantes, así que es mucho más benévolo que el de la búsqueda grande: lee primero la mediana.
+Exportado en resultados_grid/AAPL_20261026_2031/: AAPL_f4_daily.csv y AAPL_f4_contexto.txt (variante 1: #5 EMA3X(f=20,m=150,s=130) AND MACD(f=16,s=35,sig=9,modo=senal) | vol 0.2 | filtro -)
+[control] #1 EMA3X(f=5,m=200,s=160) AND MACD(f=8,s=21,sig=9,modo=senal): Sharpe total recalculado 1.459 vs búsqueda 1.459
+[control] #2 EMA3X(f=5,m=200,s=160) AND MACD(f=16,s=35,sig=9,modo=senal): Sharpe total recalculado 1.412 vs búsqueda 1.412
+
+VALIDACIÓN CONGELADA (mismos parámetros, mismos costes y ejecución; 'bh_' = buy & hold del mismo tramo):
+
+                                                        candidato                       donde    anos  sharpe  bh_sharpe   cagr  bh_cagr  maxdd  bh_maxdd   expo  ops  ops_ano     wr     pf    veredicto
+0   #1 EMA3X(f=5,m=200,s=160) AND MACD(f=8,s=21,sig=9,modo=senal)  AAPL 2000-04-10→2017-12-29  17.719   0.660      0.726  0.129    0.232 -0.415    -0.795  0.353  141    7.957  0.482  1.957  NO mantiene
+1  #2 EMA3X(f=5,m=200,s=160) AND MACD(f=16,s=35,sig=9,modo=senal)  AAPL 2000-04-10→2017-12-29  17.719   0.307      0.726  0.045    0.232 -0.680    -0.795  0.373  101    5.700  0.416  1.409  NO mantiene
+
+FRENTE AL BUY & HOLD (para activos donde el buy & hold ya es muy bueno, superarlo en Sharpe no es la vara adecuada):
+  alfa = rentabilidad anual no explicada por la exposición al activo (beta) · alfa_t = su t-stat · calmar = CAGR/|MaxDD| · captura = CAGR del sistema / CAGR del buy & hold
+  dd_evitado = 1 - |MaxDD sistema| / |MaxDD buy & hold| · vs_bh: 'mejora riesgo/retorno' si calmar > el del buy & hold; 'reduce riesgo' si captura >= 0.5 y dd_evitado >= 0.3; si no, 'no aporta'
+
+                                                        candidato   beta   alfa  alfa_t  calmar  bh_calmar  captura  dd_evitado                  vs_bh
+0   #1 EMA3X(f=5,m=200,s=160) AND MACD(f=8,s=21,sig=9,modo=senal)  0.292  0.059   1.339   0.311      0.291    0.557       0.479  mejora riesgo/retorno
+1  #2 EMA3X(f=5,m=200,s=160) AND MACD(f=16,s=35,sig=9,modo=senal)  0.312 -0.022  -0.496   0.066      0.291    0.194       0.145              no aporta
+
+Cómo leerlo: estos datos no entraron en ninguna elección, así que aquí no hay sesgo de selección. Con pocas operaciones el resultado es ruidoso; lo que importa es que el Sharpe se mantenga claramente positivo y que el drawdown sea menor que el del buy & hold, no que iguale el del backtest.

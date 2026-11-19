@@ -1,0 +1,10 @@
+instrumento y calendario: BTC-USD (ETF), calendario de 7 días (24/7), OJO: el portfolio espera L-V; ejecución EXEC_DELAY=2; 3221 filas, 2018-01-01 -> 2026-10-26
+periodo de diseño y OOS: diseño (IS) 2018-01-01 -> 2023-04-12 · OOS 2023-04-13 -> 2026-10-26; el historial anterior solo calienta medias
+coste asumido: 10 pb por lado sobre cada cambio de posición (strategy_return viene neto) · rentabilidad del capital fuera de mercado: 0.0% anual
+sistema y tipo de sleeve: EMA3X(f=5,m=150,s=100) AND HMA(n=250,banda=0.0) AND TSMOM(n=126) · 0/1, entrada y salida por señal
+---
+estado del sleeve: provisional
+convención: strategy_return[t] = position[t]·bh_return[t] − |Δposition|·coste, con position[t] = signal_next[t−1]
+estado frente a los filtros de Rick: supera todos los filtros
+validación: Sharpe IS 1.73 · OOS 1.05 · total 1.48 · MaxDD -25.4% · WR IS 67% · PF IS 84.7 · DSR IS 0.97 · bloques IS 1.0 / 2.5 / 1.4 · PSA 67% vecinos sanos
+filtros usados: Sharpe>=1.35, WR>=50%, PF>=2.5, OOS>1, modo 'full'; 596,689 pruebas

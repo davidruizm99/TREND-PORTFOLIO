@@ -1,0 +1,126 @@
+====================================================================================================
+INFORME · Grid research en batería · ETH-USD
+Generado: 2026-10-26 10:57
+Ventana de trabajo 2018-01-01 -> 2026-10-26 · IS hasta 2023-04-12 · OOS desde 2023-04-13
+Calendario: 7 días (24/7) · anualización 365
+Configuración: TICKER='ETH-USD', DATA_SOURCE='yfinance', START='1999-01-01', EVAL_START='2018-01-01', IS_END='2023-04-12', IS_FRAC=0.6, COST_BPS=10.0, EXEC_DELAY=2, CALENDARIO='auto', RF_ANUAL=0.0, SHARPE_MIN=1.35, WINRATE_MIN=0.5, PF_MIN=2.5, OOS_SHARPE_MIN=1.0, MIN_TRADES_ANO=1.0, MAX_TRADES_ANO=None, MIN_EXPOSICION=0.1, FILTRO_MODO='full', INDICADORES=['EMA3', 'EMA3X', 'SMA', 'MACD', 'HMA', 'EMAX', 'DONCHIAN', 'KELTNER', 'TSMOM', 'RSI'], TAMANOS=[1, 2, 3], LOGICAS=['OR', 'AND'], TOP_K_PARES=40, TOP_K_TRIOS=15, MAX_COMBOS_FAMILIA=1500000, SEMILLA=42, ORDENAR_POR='sharpe_all', N_SHORTLIST=15, NEAR_N=200, FUENTE_CANDIDATO='auto', ENSEMBLES=True, ENS_TOPKS=[None, 10], ENS_UMBRALES=[0.0, 0.25, 0.5], ENS_FORMAS=['fraccional', 'binario'], ENS_PASOS=4, ENS_MAX_FAMILIAS=9, PSA_METRICA='sharpe_IS', POOL_PSA=100, QUITAR_DUPLICADOS=True, DEDUPE_CORR=0.95, BLOQUES_IS=3, BLOQUE_SHARPE_MIN=None, PSA_RATIO=0.7, PSA_MIN_PCT=None, CANDIDATO=[1, 2], EXPORTAR=True, FASE4=True, F4_TOP=5, F4_VOL_OBJ=[None, 0.2, 0.35], F4_VOL_N=20, F4_PASO_TAMANO=0.25, F4_LEV_MAX=1.0, F4_FILTRO_TICKER=None, F4_FILTRO_SMA=[100, 200], VAL_ACTIVAR=True, VAL_CANDIDATOS=None, VAL_PERIODOS='auto', VAL_ACTIVOS=['BTC-USD'], VAL_WARMUP=320, VAL_SHARPE_OK=0.7
+GRIDS: {'EMA3': {'f': [5, 8, 12, 16, 20, 30], 'm': [20, 30, 40, 60, 80], 's': [50, 65, 80, 100, 150, 200]}, 'EMA3X': {'f': [5, 8, 12, 16, 20, 30], 'm': [50, 80, 100, 120, 150, 200], 's': [65, 100, 130, 160, 200]}, 'SMA': {'n': [50, 65, 80, 100, 120, 150, 180, 200, 250]}, 'MACD': {'f': [8, 12, 16, 20, 40], 's': [21, 26, 35, 50, 80, 120, 200, 300], 'sig': [5, 9, 12, 16], 'modos': ['cero', 'senal']}, 'HMA': {'n': [50, 80, 100, 150, 200, 250], 'banda': [0.0, 0.0025, 0.005]}, 'EMAX': {'f': [10, 20, 30, 50], 's': [50, 80, 100, 150, 200]}, 'DONCHIAN': {'n_in': [20, 40, 55, 100, 150], 'n_out': [10, 20, 40, 55]}, 'KELTNER': {'n': [20, 30, 50, 80], 'm': [1.0, 1.5, 2.0, 2.5], 'atr_n': [14]}, 'TSMOM': {'n': [21, 42, 63, 126, 189, 252]}, 'RSI': {'n': [14, 30, 60, 100], 'umbral': [50, 55, 60]}}
+====================================================================================================
+
+Calendario: 7 días (24/7) · 365 barras/año en los datos · Sharpe anualizado con 365  [OJO: el portfolio trabaja en L-V; para exportar a él usa CALENDARIO='LV']
+ETH-USD: 2017-11-09 -> 2026-10-26 (3274 barras)
+Ventana de trabajo: 2018-01-01 -> 2026-10-26  |  IS hasta 2023-04-12 (1928 barras)  |  OOS desde 2023-04-13 (1293 barras)
+Buy & hold  ->  IS: Sharpe 0.67 CAGR 19.3% MaxDD -94.0%  |  OOS: Sharpe 0.40 CAGR 5.6% MaxDD -67.6%  |  ALL: Sharpe 0.57 CAGR 13.6% MaxDD -94.0%
+EMA3        138 configuraciones
+EMA3X       168 configuraciones
+SMA           9 configuraciones
+MACD        185 configuraciones
+HMA          18 configuraciones
+EMAX         19 configuraciones
+DONCHIAN     20 configuraciones
+KELTNER      16 configuraciones
+TSMOM         6 configuraciones
+RSI          12 configuraciones
+Señales calculadas en 0.8s
+Verificación EMA3(f=5,m=20,s=50): Sharpe motor 0.7416 vs pandas 0.7416
+Mejor configuración de cada indicador por Sharpe IS (solo):
+                           params  sharpe_IS  sharpe_OOS  sharpe_ALL  cagr_ALL  maxdd_ALL  expo_IS  ntr_ALL
+           EMA3X(f=16,m=150,s=65)      1.316       0.511       1.049     0.525     -0.593    0.439       26
+     KELTNER(n=20,m=1.5,atr_n=14)      1.306       0.013       0.924     0.391     -0.506    0.342       57
+MACD(f=20,s=300,sig=5,modo=senal)      1.277       0.617       1.055     0.546     -0.518    0.513       72
+           HMA(n=100,banda=0.005)      1.274       0.927       1.147     0.639     -0.585    0.527      120
+              RSI(n=14,umbral=50)      1.271       0.590       1.040     0.553     -0.510    0.507      143
+                        SMA(n=50)      1.254       0.666       1.054     0.558     -0.571    0.507       81
+            EMA3(f=16,m=30,s=100)      1.236       0.489       0.989     0.445     -0.494    0.373       23
+       DONCHIAN(n_in=20,n_out=20)      1.207       0.517       0.979     0.499     -0.592    0.497       31
+                      TSMOM(n=21)      1.052       0.519       0.874     0.408     -0.656    0.517      158
+                 EMAX(f=10,s=150)      1.005       0.365       0.791     0.331     -0.605    0.453       14
+  pares: 41,998 pruebas en 15s
+  trios: 541,836 pruebas en 207s
+  ensembles: 12,264 pruebas en 3s
+
+Pruebas totales (para el DSR): 596,689   ·   tiempo 225s   ·   candidatos tras el primer corte: 229
+EMBUDO DE FILTROS
+  pruebas totales                                      596,689
+  pasan Sharpe (alguna lectura) y OOS > 1                 229
+  ... y win rate >= 50% y PF >= 2.5, lectura FULL             22
+  ... y win rate >= 50% y PF >= 2.5, lectura IS              177
+  pasan con FILTRO_MODO='full'                              22
+SHORTLIST: 22 combinaciones pasan los filtros; agrupadas por familia (corr > 0.95) se muestran 5 ('n_similares' = cuántas otras, peores, caen en su familia)
+
+                                                                                  combinacion  sharpe_IS  sharpe_OOS  sharpe_ALL  cagr_ALL  maxdd_ALL  wr_IS   pf_IS  wr_ALL  pf_ALL  ntr_IS  ntr_ALL  tr_ano  expo_IS  expo_ALL  dsr_is  dsr_is_cons       sh_bloques  psa_pct  sh_vec_medio  n_similares  pasa_full  pasa_is
+1  EMA3X(f=16,m=120,s=65) OR MACD(f=20,s=300,sig=9,modo=senal) OR DONCHIAN(n_in=150,n_out=10)      1.652       1.026       1.431     1.073     -0.515  0.700  20.640   0.611  14.017    20.0     36.0   4.084    0.689     0.690   0.963        0.165  1.3 / 2.2 / 1.3    1.000         1.576           14       True     True
+2  MACD(f=16,s=300,sig=9,modo=senal) OR HMA(n=100,banda=0.005) OR DONCHIAN(n_in=150,n_out=20)      1.547       1.056       1.371     0.947     -0.601  0.488   7.711   0.507   5.758    41.0     71.0   8.054    0.637     0.645   0.938        0.114  0.8 / 2.6 / 1.1    1.000         1.437            1       True    False
+3  EMA3X(f=16,m=120,s=65) OR MACD(f=40,s=80,sig=5,modo=senal) OR KELTNER(n=20,m=2.5,atr_n=14)      1.523       1.056       1.354     0.982     -0.744  0.630   7.501   0.578   7.121    27.0     45.0   5.104    0.684     0.668   0.932        0.103  0.8 / 2.3 / 1.4    1.000         1.464            2       True     True
+4   EMA3X(f=16,m=120,s=65) OR MACD(f=40,s=200,sig=9,modo=senal) OR DONCHIAN(n_in=40,n_out=10)      1.478       1.146       1.352     0.998     -0.660  0.684  11.713   0.667  11.454    19.0     33.0   3.743    0.722     0.708   0.917        0.085  1.0 / 2.2 / 1.1    1.000         1.447            0       True     True
+5   EMA3X(f=5,m=120,s=65) OR MACD(f=16,s=300,sig=9,modo=senal) OR DONCHIAN(n_in=150,n_out=20)      1.522       1.049       1.351     0.946     -0.641  0.500   7.939   0.510   7.839    34.0     51.0   5.785    0.640     0.683   0.931        0.103  1.2 / 2.0 / 1.3    0.917         1.425            0       True     True
+
+CASI-APROBADOS: las 15 mejores por Sharpe IS aunque NO pasen los filtros (columna 'falla' = qué filtro incumple):
+
+                                                                                         combinacion  sharpe_IS  sharpe_OOS  sharpe_ALL  cagr_ALL  maxdd_ALL  wr_IS   pf_IS  wr_ALL  pf_ALL  ntr_IS  ntr_ALL  tr_ano  expo_IS  expo_ALL  dsr_is       sh_bloques  psa_pct  sh_vec_medio  n_similares                                              falla
+1        EMA3X(f=16,m=120,s=65) OR MACD(f=20,s=300,sig=9,modo=senal) OR KELTNER(n=50,m=2.0,atr_n=14)      1.700       0.977       1.449     1.135     -0.515  0.824  27.529   0.667  14.887    17.0     33.0   3.743    0.718     0.710   0.971  1.4 / 2.2 / 1.4    1.000         1.608          421                                        OOS 0.98<=1
+2         MACD(f=16,s=300,sig=9,modo=senal) OR HMA(n=100,banda=0.005) OR DONCHIAN(n_in=150,n_out=20)      1.547       1.056       1.371     0.947     -0.601  0.488   7.711   0.507   5.758    41.0     71.0   8.054    0.637     0.645   0.938  0.8 / 2.6 / 1.1    1.000         1.437          159                                               pasa
+3   MACD(f=20,s=300,sig=9,modo=senal) OR DONCHIAN(n_in=150,n_out=20) OR KELTNER(n=20,m=1.5,atr_n=14)      1.581       0.956       1.364     0.892     -0.458  0.593   9.816   0.535   7.125    27.0     43.0   4.878    0.570     0.564   0.947  1.4 / 2.2 / 1.0    1.000         1.448          157                                        OOS 0.96<=1
+4          EMA3X(f=5,m=120,s=65) OR MACD(f=16,s=300,sig=9,modo=senal) OR DONCHIAN(n_in=150,n_out=10)      1.558       0.995       1.357     0.948     -0.641  0.500   8.090   0.509   7.378    34.0     55.0   6.239    0.635     0.666   0.941  1.2 / 2.1 / 1.3    0.909         1.445          226                                        OOS 0.99<=1
+5                  EMA3X(f=16,m=120,s=65) OR MACD(f=40,s=80,sig=5,modo=senal) OR RSI(n=60,umbral=60)      1.493       1.127       1.357     0.974     -0.744  0.615   8.113   0.556   7.753    26.0     45.0   5.104    0.677     0.664   0.922  0.6 / 2.3 / 1.4    1.000         1.426           99                                               pasa
+6         EMA3X(f=16,m=100,s=65) OR MACD(f=20,s=300,sig=9,modo=senal) OR DONCHIAN(n_in=150,n_out=10)      1.573       0.904       1.340     0.951     -0.502  0.650  18.116   0.556  10.449    20.0     36.0   4.084    0.689     0.692   0.946  1.1 / 2.2 / 1.3    1.000         1.497           54                  Sharpe ALL 1.34<1.35; OOS 0.90<=1
+7           EMA3X(f=5,m=120,s=65) OR MACD(f=16,s=300,sig=9,modo=senal) OR DONCHIAN(n_in=40,n_out=20)      1.489       1.043       1.328     0.956     -0.641  0.517   9.075   0.535   8.290    29.0     43.0   4.878    0.686     0.719   0.920  1.1 / 2.2 / 1.1    0.923         1.402           43                               Sharpe ALL 1.33<1.35
+8        EMA3X(f=30,m=120,s=100) OR MACD(f=20,s=300,sig=9,modo=senal) OR DONCHIAN(n_in=150,n_out=20)      1.664       0.686       1.320     0.919     -0.622  0.700  21.259   0.586  11.784    20.0     29.0   3.290    0.669     0.711   0.965  1.5 / 2.3 / 1.1    0.833         1.492            9                  Sharpe ALL 1.32<1.35; OOS 0.69<=1
+9                                       ENSEMBLE[EMA3X+MACD+DONCHIAN] · binario · top10 · voto>=0.25      1.453       1.071       1.312     0.882     -0.567  0.591   9.472   0.477   6.898    22.0     44.0   4.991    0.642     0.649   0.908  0.7 / 2.2 / 1.2      NaN         1.453            0               Sharpe ALL 1.31<1.35; WR ALL 48%<50%
+10              EMA3(f=20,m=60,s=100) OR EMA3X(f=5,m=120,s=65) OR MACD(f=12,s=300,sig=12,modo=senal)      1.547       0.868       1.310     0.950     -0.608  0.500  11.255   0.514  10.591    22.0     35.0   3.970    0.701     0.748   0.934  1.0 / 2.0 / 1.5    0.933         1.438           76                  Sharpe ALL 1.31<1.35; OOS 0.87<=1
+11                                       EMA3X(f=16,m=120,s=65) OR MACD(f=40,s=300,sig=9,modo=senal)      1.431       1.099       1.307     0.919     -0.605  0.800  18.343   0.676  13.683    15.0     34.0   3.857    0.700     0.702   0.899  0.8 / 2.2 / 1.1    1.000         1.405           81                               Sharpe ALL 1.31<1.35
+12         MACD(f=20,s=300,sig=9,modo=senal) OR HMA(n=100,banda=0.005) OR DONCHIAN(n_in=40,n_out=20)      1.476       1.000       1.305     0.910     -0.588  0.514   8.340   0.508   5.829    37.0     65.0   7.373    0.688     0.686   0.915  0.9 / 2.6 / 0.8    1.000         1.360          176                  Sharpe ALL 1.31<1.35; OOS 1.00<=1
+13        EMA3X(f=16,m=150,s=65) OR MACD(f=20,s=300,sig=9,modo=senal) OR DONCHIAN(n_in=150,n_out=20)      1.506       0.924       1.301     0.893     -0.518  0.609  14.850   0.556  10.558    23.0     36.0   4.084    0.670     0.701   0.927  0.9 / 2.1 / 1.3    1.000         1.367           21                  Sharpe ALL 1.30<1.35; OOS 0.92<=1
+14         MACD(f=20,s=300,sig=9,modo=senal) OR HMA(n=100,banda=0.0) OR KELTNER(n=30,m=2.5,atr_n=14)      1.475       0.982       1.300     0.863     -0.556  0.477   5.368   0.450   4.101    44.0     80.0   9.075    0.634     0.615   0.915  1.1 / 2.3 / 0.9    1.000         1.388          220  Sharpe ALL 1.30<1.35; WR ALL 45%<50%; OOS 0.98<=1
+15                    EMA3X(f=16,m=120,s=65) OR MACD(f=20,s=300,sig=9,modo=senal) OR EMAX(f=30,s=50)      1.466       0.975       1.291     0.966     -0.605  0.769  18.422   0.727  17.998    13.0     22.0   2.495    0.784     0.803   0.908  1.1 / 1.9 / 1.3    1.000         1.392           63                  Sharpe ALL 1.29<1.35; OOS 0.97<=1
+Robustez (solo informativa): 'sh_bloques' = Sharpe del IS en 3 tramos seguidos; 'psa_pct' = fracción de vecinos de parámetros (un paso) que conservan >= 70% del Sharpe IS.
+
+Buy & hold de referencia: IS: Sharpe 0.67 | OOS: Sharpe 0.40 | ALL: Sharpe 0.57
+DSR: con 596,689 pruebas, un DSR < 0,95 indica que el Sharpe IS es compatible con haber elegido el máximo entre muchas pruebas. 'dsr_is' usa la varianza observada; 'dsr_is_cons' es la cota dura (pruebas independientes).
+Origen: shortlist (supera los filtros)
+EMA3X(f=16,m=120,s=65) OR MACD(f=20,s=300,sig=9,modo=senal) OR DONCHIAN(n_in=150,n_out=10)
+Sharpe IS 1.65 · OOS 1.03 · total 1.43 | WR IS 70% · PF IS 20.6 | CAGR 107.3% · MaxDD -51.5%
+36 operaciones · mejor 526.2% · peor -26.5% · Sharpe total sin la mejor operación: 1.19 (con ella: 1.43)
+Exportado en resultados_grid/ETH-USD_20261026_1053/: ETH-USD_c1_daily.csv y ETH-USD_c1_contexto.txt
+Origen: shortlist (supera los filtros)
+MACD(f=16,s=300,sig=9,modo=senal) OR HMA(n=100,banda=0.005) OR DONCHIAN(n_in=150,n_out=20)
+Sharpe IS 1.55 · OOS 1.06 · total 1.37 | WR IS 49% · PF IS 7.7 | CAGR 94.7% · MaxDD -60.1%
+71 operaciones · mejor 649.1% · peor -22.0% · Sharpe total sin la mejor operación: 1.06 (con ella: 1.37)
+Exportado en resultados_grid/ETH-USD_20261026_1053/: ETH-USD_c2_daily.csv y ETH-USD_c2_contexto.txt
+FASE 4: 15 variantes = 5 candidatos base x capas (vol sizing, redondeo, filtro). Sirve para ver si una capa mejora la ROBUSTEZ del sistema, no para repetir la búsqueda.
+Sharpe total de las 15 variantes: mediana 1.36 · p10 1.30 · p90 1.43 · máximo 1.45   (buy & hold: 0.57)
+Sharpe OOS: mediana 1.08   ·   variantes con Sharpe IS >= 1.35 y OOS > 1: 13   ·   pasan los filtros completos: full 9 / is 12
+
+Las 15 mejores (ordenadas por sharpe_ALL):
+
+                                                                                           variante  sharpe_IS  sharpe_OOS  sharpe_ALL  cagr_ALL  maxdd_ALL  expo_IS  expo_ALL  tr_ano  giro_ano  wr_ALL  pf_ALL  dsr_is  pasa_full  pasa_is
+1   #5 EMA3X(f=5,m=120,s=65) OR MACD(f=16,s=300,sig=9,modo=senal) OR DONCHIAN | vol 0.35 | filtro -      1.687       1.116       1.452     0.553     -0.348    0.312     0.385   5.785    11.854   0.490   7.989   1.000      False     True
+2    #5 EMA3X(f=5,m=120,s=65) OR MACD(f=16,s=300,sig=9,modo=senal) OR DONCHIAN | vol 0.2 | filtro -      1.734       0.995       1.436     0.310     -0.234    0.181     0.223   5.672     6.239   0.540   7.512   1.000      False    False
+3   #2 MACD(f=16,s=300,sig=9,modo=senal) OR HMA(n=100,banda=0.005) OR DONCHIA | vol 0.35 | filtro -      1.618       1.151       1.432     0.531     -0.368    0.312     0.362   8.054    13.895   0.535   4.814   1.000       True     True
+4      #1 EMA3X(f=16,m=120,s=65) OR MACD(f=20,s=300,sig=9,modo=senal) OR DONCHIA | vol - | filtro -      1.652       1.026       1.431     1.073     -0.515    0.689     0.690   4.084     8.167   0.611  14.017   1.000       True     True
+5   #1 EMA3X(f=16,m=120,s=65) OR MACD(f=20,s=300,sig=9,modo=senal) OR DONCHIA | vol 0.35 | filtro -      1.659       1.081       1.430     0.554     -0.417    0.336     0.383   4.084    10.492   0.583  10.490   1.000       True     True
+6    #2 MACD(f=16,s=300,sig=9,modo=senal) OR HMA(n=100,banda=0.005) OR DONCHIA | vol 0.2 | filtro -      1.624       1.076       1.410     0.299     -0.203    0.183     0.211   8.167     7.713   0.514   4.558   1.000       True     True
+7      #2 MACD(f=16,s=300,sig=9,modo=senal) OR HMA(n=100,banda=0.005) OR DONCHIA | vol - | filtro -      1.547       1.056       1.371     0.947     -0.601    0.637     0.645   8.054    15.994   0.507   5.758   0.999       True    False
+8   #4 EMA3X(f=16,m=120,s=65) OR MACD(f=40,s=200,sig=9,modo=senal) OR DONCHIA | vol 0.35 | filtro -      1.463       1.211       1.365     0.527     -0.417    0.348     0.389   3.743    10.124   0.667   9.735   0.999       True     True
+9      #3 EMA3X(f=16,m=120,s=65) OR MACD(f=40,s=80,sig=5,modo=senal) OR KELTNER( | vol - | filtro -      1.523       1.056       1.354     0.982     -0.744    0.684     0.668   5.104    10.095   0.578   7.121   0.999       True     True
+10     #4 EMA3X(f=16,m=120,s=65) OR MACD(f=40,s=200,sig=9,modo=senal) OR DONCHIA | vol - | filtro -      1.478       1.146       1.352     0.998     -0.660    0.722     0.708   3.743     7.373   0.667  11.454   0.999       True     True
+11     #5 EMA3X(f=5,m=120,s=65) OR MACD(f=16,s=300,sig=9,modo=senal) OR DONCHIAN | vol - | filtro -      1.522       1.049       1.351     0.946     -0.641    0.640     0.683   5.785    11.457   0.510   7.839   0.999       True     True
+12   #1 EMA3X(f=16,m=120,s=65) OR MACD(f=20,s=300,sig=9,modo=senal) OR DONCHIA | vol 0.2 | filtro -      1.568       0.983       1.339     0.292     -0.333    0.194     0.222   4.197     5.785   0.595   7.485   0.999      False    False
+13  #3 EMA3X(f=16,m=120,s=65) OR MACD(f=40,s=80,sig=5,modo=senal) OR KELTNER( | vol 0.35 | filtro -      1.458       1.118       1.326     0.495     -0.502    0.328     0.365   5.104    10.918   0.600   5.602   0.998      False     True
+14   #3 EMA3X(f=16,m=120,s=65) OR MACD(f=40,s=80,sig=5,modo=senal) OR KELTNER( | vol 0.2 | filtro -      1.447       1.017       1.283     0.277     -0.333    0.190     0.212   5.218     6.069   0.587   4.919   0.998      False     True
+15   #4 EMA3X(f=16,m=120,s=65) OR MACD(f=40,s=200,sig=9,modo=senal) OR DONCHIA | vol 0.2 | filtro -      1.385       1.089       1.271     0.280     -0.333    0.202     0.226   3.970     5.615   0.657   7.796   0.997      False     True
+
+'expo' = tamaño medio (0-1); 'giro_ano' = suma anual de cambios de tamaño (coste); el DSR usa solo el nº de variantes, así que es mucho más benévolo que el de la búsqueda grande: lee primero la mediana.
+Exportado en resultados_grid/ETH-USD_20261026_1053/: ETH-USD_f4_daily.csv y ETH-USD_f4_contexto.txt (variante 1: #5 EMA3X(f=5,m=120,s=65) OR MACD(f=16,s=300,sig=9,modo=senal) OR DONCHIAN | vol 0.35 | filtro -)
+[control] #1 EMA3X(f=16,m=120,s=65) OR MACD(f=20,s=300,sig=9,modo=senal) : Sharpe total recalculado 1.431 vs búsqueda 1.431
+  (no hay historial suficiente anterior a EVAL_START: baja START o VAL_WARMUP)
+[control] #2 MACD(f=16,s=300,sig=9,modo=senal) OR HMA(n=100,banda=0.005) : Sharpe total recalculado 1.371 vs búsqueda 1.371
+  (no hay historial suficiente anterior a EVAL_START: baja START o VAL_WARMUP)
+
+VALIDACIÓN CONGELADA (mismos parámetros, mismos costes y ejecución; 'bh_' = buy & hold del mismo tramo):
+
+                                                         candidato                          donde    anos  sharpe  bh_sharpe   cagr  bh_cagr  maxdd  bh_maxdd   expo  ops  ops_ano     wr     pf veredicto
+0  #1 EMA3X(f=16,m=120,s=65) OR MACD(f=20,s=300,sig=9,modo=senal)   BTC-USD 2015-08-03→2026-10-26  11.231   1.311      1.096  0.783    0.654 -0.783    -0.834  0.728   58    5.164  0.431  7.347  mantiene
+1  #2 MACD(f=16,s=300,sig=9,modo=senal) OR HMA(n=100,banda=0.005)   BTC-USD 2015-08-03→2026-10-26  11.231   1.281      1.096  0.710    0.654 -0.690    -0.834  0.704   84    7.480  0.476  4.607  mantiene
+
+Cómo leerlo: estos datos no entraron en ninguna elección, así que aquí no hay sesgo de selección. Con pocas operaciones el resultado es ruidoso; lo que importa es que el Sharpe se mantenga claramente positivo y que el drawdown sea menor que el del buy & hold, no que iguale el del backtest.

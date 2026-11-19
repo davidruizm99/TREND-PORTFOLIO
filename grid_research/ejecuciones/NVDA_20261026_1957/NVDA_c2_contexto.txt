@@ -1,0 +1,10 @@
+instrumento y calendario: NVDA (ETF), calendario de 5 días (L-V); ejecución EXEC_DELAY=2; 2216 filas, 2018-01-02 -> 2026-10-26
+periodo de diseño y OOS: diseño (IS) 2018-01-02 -> 2023-04-12 · OOS 2023-04-13 -> 2026-10-26; el historial anterior solo calienta medias
+coste asumido: 10 pb por lado sobre cada cambio de posición (strategy_return viene neto) · rentabilidad del capital fuera de mercado: 0.0% anual
+sistema y tipo de sleeve: MACD(f=8,s=120,sig=9,modo=senal) OR DONCHIAN(n_in=100,n_out=55) · 0/1, entrada y salida por señal
+---
+estado del sleeve: provisional
+convención: strategy_return[t] = position[t]·bh_return[t] − |Δposition|·coste, con position[t] = signal_next[t−1]
+estado frente a los filtros de Rick: supera todos los filtros
+validación: Sharpe IS 1.34 · OOS 1.49 · total 1.40 · MaxDD -53.0% · WR IS 63% · PF IS 7.2 · DSR IS 0.90 · bloques IS 1.2 / 1.9 / 0.9 · PSA 100% vecinos sanos
+filtros usados: Sharpe>=1.35, WR>=50%, PF>=2.5, OOS>1, modo 'full'; 596,689 pruebas

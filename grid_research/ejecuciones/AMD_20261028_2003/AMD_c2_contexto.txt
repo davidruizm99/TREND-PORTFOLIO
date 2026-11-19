@@ -1,0 +1,10 @@
+instrumento y calendario: AMD (ETF), calendario de 5 días (L-V); ejecución EXEC_DELAY=2; 2218 filas, 2018-01-02 -> 2026-10-28
+periodo de diseño y OOS: diseño (IS) 2018-01-02 -> 2023-04-12 · OOS 2023-04-13 -> 2026-10-28; el historial anterior solo calienta medias
+coste asumido: 10 pb por lado sobre cada cambio de posición (strategy_return viene neto) · rentabilidad del capital fuera de mercado: 0.0% anual
+sistema y tipo de sleeve: EMA3X(f=12,m=50,s=100) AND MACD(f=8,s=80,sig=16,modo=senal) AND HMA(n=50,banda=0.005) · 0/1, entrada y salida por señal
+---
+estado del sleeve: provisional
+convención: strategy_return[t] = position[t]·bh_return[t] − |Δposition|·coste, con position[t] = signal_next[t−1]
+estado frente a los filtros de Rick: supera todos los filtros
+validación: Sharpe IS 1.57 · OOS 1.23 · total 1.42 · MaxDD -34.4% · WR IS 62% · PF IS 4.6 · DSR IS 0.97 · bloques IS 1.7 / 1.6 / 1.3 · PSA 100% vecinos sanos
+filtros usados: Sharpe>=1.45, WR>=50%, PF>=2.5, OOS>1, modo 'alguno'; 596,689 pruebas

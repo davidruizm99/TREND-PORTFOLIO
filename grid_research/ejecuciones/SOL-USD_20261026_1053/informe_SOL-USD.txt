@@ -1,0 +1,120 @@
+====================================================================================================
+INFORME · Grid research en batería · SOL-USD
+Generado: 2026-10-26 10:56
+Ventana de trabajo 2021-03-01 -> 2026-10-26 · IS hasta 2024-07-21 · OOS desde 2024-07-22
+Calendario: 7 días (24/7) · anualización 365
+Configuración: TICKER='SOL-USD', DATA_SOURCE='yfinance', START='1999-01-01', EVAL_START='2021-03-01', IS_END=None, IS_FRAC=0.6, COST_BPS=10.0, EXEC_DELAY=2, CALENDARIO='auto', RF_ANUAL=0.0, SHARPE_MIN=1.35, WINRATE_MIN=0.5, PF_MIN=2.5, OOS_SHARPE_MIN=1.0, MIN_TRADES_ANO=1.0, MAX_TRADES_ANO=None, MIN_EXPOSICION=0.1, FILTRO_MODO='full', INDICADORES=['EMA3', 'EMA3X', 'SMA', 'MACD', 'HMA', 'EMAX', 'DONCHIAN', 'KELTNER', 'TSMOM', 'RSI'], TAMANOS=[1, 2, 3], LOGICAS=['OR', 'AND'], TOP_K_PARES=40, TOP_K_TRIOS=15, MAX_COMBOS_FAMILIA=1500000, SEMILLA=42, ORDENAR_POR='sharpe_all', N_SHORTLIST=15, NEAR_N=200, FUENTE_CANDIDATO='auto', ENSEMBLES=True, ENS_TOPKS=[None, 10], ENS_UMBRALES=[0.0, 0.25, 0.5], ENS_FORMAS=['fraccional', 'binario'], ENS_PASOS=4, ENS_MAX_FAMILIAS=9, PSA_METRICA='sharpe_IS', POOL_PSA=100, QUITAR_DUPLICADOS=True, DEDUPE_CORR=0.95, BLOQUES_IS=3, BLOQUE_SHARPE_MIN=None, PSA_RATIO=0.7, PSA_MIN_PCT=None, CANDIDATO=[1, 2], EXPORTAR=True, FASE4=True, F4_TOP=5, F4_VOL_OBJ=[None, 0.2, 0.35], F4_VOL_N=20, F4_PASO_TAMANO=0.25, F4_LEV_MAX=1.0, F4_FILTRO_TICKER=None, F4_FILTRO_SMA=[100, 200], VAL_ACTIVAR=True, VAL_CANDIDATOS=None, VAL_PERIODOS='auto', VAL_ACTIVOS=['BTC-USD'], VAL_WARMUP=320, VAL_SHARPE_OK=0.7
+GRIDS: {'EMA3': {'f': [5, 8, 12, 16, 20, 30], 'm': [20, 30, 40, 60, 80], 's': [50, 65, 80, 100, 150, 200]}, 'EMA3X': {'f': [5, 8, 12, 16, 20, 30], 'm': [50, 80, 100, 120, 150, 200], 's': [65, 100, 130, 160, 200]}, 'SMA': {'n': [50, 65, 80, 100, 120, 150, 180, 200, 250]}, 'MACD': {'f': [8, 12, 16, 20, 40], 's': [21, 26, 35, 50, 80, 120, 200, 300], 'sig': [5, 9, 12, 16], 'modos': ['cero', 'senal']}, 'HMA': {'n': [50, 80, 100, 150, 200, 250], 'banda': [0.0, 0.0025, 0.005]}, 'EMAX': {'f': [10, 20, 30, 50], 's': [50, 80, 100, 150, 200]}, 'DONCHIAN': {'n_in': [20, 40, 55, 100, 150], 'n_out': [10, 20, 40, 55]}, 'KELTNER': {'n': [20, 30, 50, 80], 'm': [1.0, 1.5, 2.0, 2.5], 'atr_n': [14]}, 'TSMOM': {'n': [21, 42, 63, 126, 189, 252]}, 'RSI': {'n': [14, 30, 60, 100], 'umbral': [50, 55, 60]}}
+====================================================================================================
+
+Calendario: 7 días (24/7) · 365 barras/año en los datos · Sharpe anualizado con 365  [OJO: el portfolio trabaja en L-V; para exportar a él usa CALENDARIO='LV']
+SOL-USD: 2020-04-10 -> 2026-10-26 (2391 barras)
+Ventana de trabajo: 2021-03-01 -> 2026-10-26  |  IS hasta 2024-07-21 (1239 barras)  |  OOS desde 2024-07-22 (827 barras)
+Buy & hold  ->  IS: Sharpe 1.26 CAGR 118.3% MaxDD -96.3%  |  OOS: Sharpe 0.03 CAGR -23.2% MaxDD -76.3%  |  ALL: Sharpe 0.87 CAGR 43.7% MaxDD -96.3%
+EMA3        138 configuraciones
+EMA3X       168 configuraciones
+SMA           9 configuraciones
+MACD        185 configuraciones
+HMA          18 configuraciones
+EMAX         19 configuraciones
+DONCHIAN     20 configuraciones
+KELTNER      16 configuraciones
+TSMOM         6 configuraciones
+RSI          12 configuraciones
+Señales calculadas en 0.6s
+Verificación EMA3(f=5,m=20,s=50): Sharpe motor 0.9829 vs pandas 0.9829
+Mejor configuración de cada indicador por Sharpe IS (solo):
+                          params  sharpe_IS  sharpe_OOS  sharpe_ALL  cagr_ALL  maxdd_ALL  expo_IS  ntr_ALL
+    KELTNER(n=20,m=1.5,atr_n=14)      2.100      -0.260       1.448     1.005     -0.561    0.323       34
+          HMA(n=100,banda=0.005)      1.941       0.495       1.489     1.292     -0.774    0.529       98
+             RSI(n=14,umbral=60)      1.937      -0.509       1.315     0.799     -0.494    0.257       79
+           EMA3(f=12,m=40,s=150)      1.863      -0.214       1.274     0.891     -0.641    0.383       13
+     DONCHIAN(n_in=150,n_out=55)      1.845      -0.081       1.263     0.958     -0.580    0.472        4
+         EMA3X(f=20,m=150,s=160)      1.845      -0.234       1.224     0.914     -0.591    0.527        8
+                EMAX(f=20,s=150)      1.811      -0.280       1.190     0.864     -0.629    0.529        8
+MACD(f=8,s=80,sig=16,modo=senal)      1.768       0.236       1.300     0.996     -0.825    0.520       56
+                    TSMOM(n=126)      1.730       0.163       1.262     0.978     -0.618    0.577       22
+                      SMA(n=200)      1.694      -0.232       1.139     0.795     -0.715    0.579       22
+  pares: 41,998 pruebas en 9s
+  trios: 541,836 pruebas en 133s
+  ensembles: 12,264 pruebas en 3s
+
+Pruebas totales (para el DSR): 596,689   ·   tiempo 145s   ·   candidatos tras el primer corte: 4
+EMBUDO DE FILTROS
+  pruebas totales                                      596,689
+  pasan Sharpe (alguna lectura) y OOS > 1                   4
+  ... y win rate >= 50% y PF >= 2.5, lectura FULL              0
+  ... y win rate >= 50% y PF >= 2.5, lectura IS                0
+  pasan con FILTRO_MODO='full'                               0
+Ninguna combinación pasa todos los filtros con esta configuración.
+Qué se puede hacer: bajar SHARPE_MIN o PF_MIN, ampliar las rejillas, probar otro activo o FILTRO_MODO='alguno'. Abajo, las que más se acercan.
+
+CASI-APROBADOS: las 15 mejores por Sharpe IS aunque NO pasen los filtros (columna 'falla' = qué filtro incumple):
+
+                                                                                      combinacion  sharpe_IS  sharpe_OOS  sharpe_ALL  cagr_ALL  maxdd_ALL  wr_IS   pf_IS  wr_ALL  pf_ALL  ntr_IS  ntr_ALL  tr_ano  expo_IS  expo_ALL  dsr_is        sh_bloques  psa_pct  sh_vec_medio  n_similares                         falla
+1               MACD(f=8,s=80,sig=16,modo=senal) AND DONCHIAN(n_in=150,n_out=40) AND TSMOM(n=252)      2.311       0.627       1.829     1.164     -0.259  0.667  25.289   0.667  25.859    18.0     21.0   3.714    0.220     0.155   0.997   3.4 / 0.0 / 2.2      1.0         2.187           40                   OOS 0.63<=1
+2                           HMA(n=50,banda=0.0) AND KELTNER(n=20,m=1.5,atr_n=14) AND TSMOM(n=252)      2.445       0.116       1.814     1.069     -0.276  0.667  24.099   0.618  14.057    21.0     34.0   6.014    0.183     0.161   0.999   3.9 / 0.0 / 2.0      1.0         2.326           40                   OOS 0.12<=1
+3                 EMA3(f=16,m=20,s=200) AND HMA(n=50,banda=0.0025) AND DONCHIAN(n_in=20,n_out=20)      2.423       0.320       1.806     1.093     -0.301  0.700  19.407   0.641  11.064    20.0     39.0   6.898    0.186     0.175   0.999   3.7 / 0.0 / 2.1      1.0         2.358          746                   OOS 0.32<=1
+4          MACD(f=20,s=200,sig=12,modo=senal) AND HMA(n=50,banda=0.0025) AND RSI(n=100,umbral=50)      2.271       0.662       1.776     1.100     -0.276  0.600  14.978   0.609   9.501    25.0     46.0   8.136    0.194     0.192   0.996   3.5 / 0.0 / 1.9      1.0         2.190          326                   OOS 0.66<=1
+5              MACD(f=8,s=80,sig=16,modo=senal) AND KELTNER(n=20,m=1.5,atr_n=14) AND TSMOM(n=252)      2.443      -0.053       1.771     1.147     -0.269  0.625  28.498   0.520  15.367    16.0     25.0   4.422    0.224     0.200   0.999   3.7 / 0.0 / 2.2      1.0         2.338           20                  OOS -0.05<=1
+6                        HMA(n=50,banda=0.0025) AND KELTNER(n=20,m=1.5,atr_n=14) AND TSMOM(n=189)      2.408       0.101       1.766     1.044     -0.397  0.682  21.782   0.579  10.516    22.0     38.0   6.721    0.192     0.170   0.999   3.7 / 0.0 / 2.1      1.0         2.317           86                   OOS 0.10<=1
+7           MACD(f=20,s=50,sig=16,modo=senal) AND HMA(n=50,banda=0.0025) AND RSI(n=100,umbral=50)      2.313       0.440       1.749     1.045     -0.272  0.654  15.207   0.609   9.222    26.0     46.0   8.136    0.193     0.192   0.997   3.2 / 0.0 / 2.4      1.0         2.193           30                   OOS 0.44<=1
+8   MACD(f=20,s=200,sig=12,modo=senal) AND HMA(n=50,banda=0.0025) AND DONCHIAN(n_in=150,n_out=40)      2.221       0.500       1.722     0.948     -0.276  0.684  28.114   0.618  13.467    19.0     34.0   6.014    0.161     0.136   0.995   3.7 / 0.0 / 1.6      1.0         2.156          113                   OOS 0.50<=1
+9               EMA3(f=30,m=60,s=150) AND HMA(n=50,banda=0.0025) AND KELTNER(n=30,m=2.0,atr_n=14)      2.322       0.057       1.715     0.940     -0.308  0.706  36.124   0.552  14.519    17.0     29.0   5.129    0.157     0.141   0.998   3.6 / 0.0 / 2.0      1.0         2.236          253                   OOS 0.06<=1
+10                        HMA(n=50,banda=0.0025) AND KELTNER(n=80,m=2.0,atr_n=14) AND TSMOM(n=21)      2.227       0.488       1.711     1.067     -0.276  0.562  11.096   0.519   7.411    32.0     54.0   9.551    0.216     0.197   0.994  3.5 / -0.2 / 2.1      1.0         2.108          104                   OOS 0.49<=1
+11                  MACD(f=40,s=50,sig=12,modo=senal) AND HMA(n=50,banda=0.0025) AND TSMOM(n=126)      2.126       0.780       1.710     1.020     -0.373  0.609  12.380   0.558   8.476    23.0     43.0   7.606    0.190     0.177   0.989  3.6 / -1.6 / 2.0      1.0         2.018           77                   OOS 0.78<=1
+12                       HMA(n=50,banda=0.0025) AND KELTNER(n=50,m=2.5,atr_n=14) AND TSMOM(n=126)      2.176       0.613       1.708     1.003     -0.301  0.591  10.785   0.550   8.080    22.0     40.0   7.075    0.191     0.170   0.993  3.6 / -0.9 / 1.8      1.0         2.117           47                   OOS 0.61<=1
+13                  DONCHIAN(n_in=150,n_out=40) AND KELTNER(n=20,m=1.5,atr_n=14) AND TSMOM(n=252)      2.157       0.582       1.707     1.058     -0.394  0.778  58.652   0.750  59.576     9.0     12.0   2.123    0.228     0.161   0.991   3.1 / 0.0 / 2.2      1.0         2.074           28                   OOS 0.58<=1
+14              MACD(f=20,s=50,sig=16,modo=senal) AND HMA(n=50,banda=0.0) AND RSI(n=14,umbral=55)      2.370       0.030       1.704     1.145     -0.423  0.706  10.867   0.565   6.005    34.0     62.0  10.966    0.245     0.247   0.998   3.5 / 0.6 / 2.6      1.0         2.182            9                   OOS 0.03<=1
+15             MACD(f=8,s=80,sig=16,modo=senal) AND KELTNER(n=20,m=1.5,atr_n=14) AND TSMOM(n=189)      2.403      -0.173       1.702     1.089     -0.379  0.647  28.832   0.464  11.865    17.0     28.0   4.953    0.236     0.209   0.999   3.5 / 0.0 / 2.3      1.0         2.311           14  WR ALL 46%<50%; OOS -0.17<=1
+Robustez (solo informativa): 'sh_bloques' = Sharpe del IS en 3 tramos seguidos; 'psa_pct' = fracción de vecinos de parámetros (un paso) que conservan >= 70% del Sharpe IS.
+
+Buy & hold de referencia: IS: Sharpe 1.26 | OOS: Sharpe 0.03 | ALL: Sharpe 0.87
+DSR: con 596,689 pruebas, un DSR < 0,95 indica que el Sharpe IS es compatible con haber elegido el máximo entre muchas pruebas. 'dsr_is' usa la varianza observada; 'dsr_is_cons' es la cota dura (pruebas independientes).
+Origen: casi-aprobados (NO supera todos los filtros)
+MACD(f=8,s=80,sig=16,modo=senal) AND DONCHIAN(n_in=150,n_out=40) AND TSMOM(n=252)
+Sharpe IS 2.31 · OOS 0.63 · total 1.83 | WR IS 67% · PF IS 25.3 | CAGR 116.4% · MaxDD -25.9%
+21 operaciones · mejor 421.3% · peor -11.1% · Sharpe total sin la mejor operación: 1.35 (con ella: 1.83)
+Exportado en resultados_grid/SOL-USD_20261026_1053/: SOL-USD_c1_daily.csv y SOL-USD_c1_contexto.txt
+Origen: casi-aprobados (NO supera todos los filtros)
+HMA(n=50,banda=0.0) AND KELTNER(n=20,m=1.5,atr_n=14) AND TSMOM(n=252)
+Sharpe IS 2.44 · OOS 0.12 · total 1.81 | WR IS 67% · PF IS 24.1 | CAGR 106.9% · MaxDD -27.6%
+34 operaciones · mejor 360.6% · peor -9.5% · Sharpe total sin la mejor operación: 1.35 (con ella: 1.81)
+Exportado en resultados_grid/SOL-USD_20261026_1053/: SOL-USD_c2_daily.csv y SOL-USD_c2_contexto.txt
+FASE 4: 15 variantes = 5 candidatos base x capas (vol sizing, redondeo, filtro). Sirve para ver si una capa mejora la ROBUSTEZ del sistema, no para repetir la búsqueda.
+Sharpe total de las 15 variantes: mediana 1.67 · p10 1.56 · p90 1.81 · máximo 1.83   (buy & hold: 0.87)
+Sharpe OOS: mediana 0.32   ·   variantes con Sharpe IS >= 1.35 y OOS > 1: 0   ·   pasan los filtros completos: full 0 / is 0
+
+Las 15 mejores (ordenadas por sharpe_ALL):
+
+                                                                                           variante  sharpe_IS  sharpe_OOS  sharpe_ALL  cagr_ALL  maxdd_ALL  expo_IS  expo_ALL  tr_ano  giro_ano  wr_ALL  pf_ALL  dsr_is  pasa_full  pasa_is
+1      #1 MACD(f=8,s=80,sig=16,modo=senal) AND DONCHIAN(n_in=150,n_out=40) AND T | vol - | filtro -      2.311       0.627       1.829     1.164     -0.259    0.220     0.155   3.714     7.252   0.667  25.859     1.0      False    False
+2       #2 HMA(n=50,banda=0.0) AND KELTNER(n=20,m=1.5,atr_n=14) AND TSMOM(n=252) | vol - | filtro -      2.445       0.116       1.814     1.069     -0.276    0.183     0.161   6.014    11.851   0.618  14.057     1.0      False    False
+3      #3 EMA3(f=16,m=20,s=200) AND HMA(n=50,banda=0.0025) AND DONCHIAN(n_in=20, | vol - | filtro -      2.423       0.320       1.806     1.093     -0.301    0.186     0.175   6.898    13.619   0.641  11.064     1.0      False    False
+4    #1 MACD(f=8,s=80,sig=16,modo=senal) AND DONCHIAN(n_in=150,n_out=40) AND T | vol 0.2 | filtro -      2.252       0.633       1.786     0.213     -0.093    0.047     0.034   3.538     2.034   0.700  16.112     1.0      False    False
+5      #4 MACD(f=20,s=200,sig=12,modo=senal) AND HMA(n=50,banda=0.0025) AND RSI( | vol - | filtro -      2.271       0.662       1.776     1.100     -0.276    0.194     0.192   8.136    16.096   0.609   9.501     1.0      False    False
+6      #5 MACD(f=8,s=80,sig=16,modo=senal) AND KELTNER(n=20,m=1.5,atr_n=14) AND  | vol - | filtro -      2.443      -0.053       1.771     1.147     -0.269    0.224     0.200   4.422     8.667   0.520  15.367     1.0      False    False
+7    #5 MACD(f=8,s=80,sig=16,modo=senal) AND KELTNER(n=20,m=1.5,atr_n=14) AND  | vol 0.2 | filtro -      2.360       0.037       1.698     0.215     -0.093    0.050     0.047   4.422     2.653   0.600   9.772     1.0      False    False
+8   #1 MACD(f=8,s=80,sig=16,modo=senal) AND DONCHIAN(n_in=150,n_out=40) AND T | vol 0.35 | filtro -      2.179       0.425       1.674     0.280     -0.125    0.070     0.054   3.714     3.228   0.571  12.745     1.0      False    False
+9     #2 HMA(n=50,banda=0.0) AND KELTNER(n=20,m=1.5,atr_n=14) AND TSMOM(n=252) | vol 0.2 | filtro -      2.240       0.111       1.640     0.188     -0.087    0.043     0.039   5.837     3.272   0.606   8.361     1.0      False    False
+10   #2 HMA(n=50,banda=0.0) AND KELTNER(n=20,m=1.5,atr_n=14) AND TSMOM(n=252) | vol 0.35 | filtro -      2.306       0.202       1.634     0.281     -0.109    0.063     0.062   6.014     5.527   0.618   8.180     1.0      False    False
+11   #3 EMA3(f=16,m=20,s=200) AND HMA(n=50,banda=0.0025) AND DONCHIAN(n_in=20, | vol 0.2 | filtro -      2.217       0.323       1.612     0.194     -0.087    0.043     0.043   6.721     3.803   0.632   6.814     1.0      False    False
+12  #3 EMA3(f=16,m=20,s=200) AND HMA(n=50,banda=0.0025) AND DONCHIAN(n_in=20, | vol 0.35 | filtro -      2.303       0.359       1.588     0.282     -0.127    0.061     0.067   6.898     6.235   0.641   6.789     1.0      False    False
+13   #4 MACD(f=20,s=200,sig=12,modo=senal) AND HMA(n=50,banda=0.0025) AND RSI( | vol 0.2 | filtro -      2.016       0.632       1.562     0.194     -0.091    0.045     0.047   7.783     4.510   0.591   5.841     1.0      False    False
+14  #5 MACD(f=8,s=80,sig=16,modo=senal) AND KELTNER(n=20,m=1.5,atr_n=14) AND  | vol 0.35 | filtro -      2.309      -0.005       1.553     0.288     -0.139    0.075     0.076   4.422     4.555   0.480   7.491     1.0      False    False
+15  #4 MACD(f=20,s=200,sig=12,modo=senal) AND HMA(n=50,banda=0.0025) AND RSI( | vol 0.35 | filtro -      2.012       0.697       1.528     0.293     -0.123    0.067     0.078   8.136     7.650   0.609   5.364     1.0      False    False
+
+'expo' = tamaño medio (0-1); 'giro_ano' = suma anual de cambios de tamaño (coste); el DSR usa solo el nº de variantes, así que es mucho más benévolo que el de la búsqueda grande: lee primero la mediana.
+Exportado en resultados_grid/SOL-USD_20261026_1053/: SOL-USD_f4_daily.csv y SOL-USD_f4_contexto.txt (variante 1: #1 MACD(f=8,s=80,sig=16,modo=senal) AND DONCHIAN(n_in=150,n_out=40) AND T | vol - | filtro -)
+[control] #1 MACD(f=8,s=80,sig=16,modo=senal) AND DONCHIAN(n_in=150,n_out: Sharpe total recalculado 1.829 vs búsqueda 1.829
+  (no hay historial suficiente anterior a EVAL_START: baja START o VAL_WARMUP)
+[control] #2 HMA(n=50,banda=0.0) AND KELTNER(n=20,m=1.5,atr_n=14) AND TSM: Sharpe total recalculado 1.814 vs búsqueda 1.814
+  (no hay historial suficiente anterior a EVAL_START: baja START o VAL_WARMUP)
+
+VALIDACIÓN CONGELADA (mismos parámetros, mismos costes y ejecución; 'bh_' = buy & hold del mismo tramo):
+
+                                                         candidato                          donde    anos  sharpe  bh_sharpe   cagr  bh_cagr  maxdd  bh_maxdd   expo  ops  ops_ano     wr     pf veredicto
+0  #1 MACD(f=8,s=80,sig=16,modo=senal) AND DONCHIAN(n_in=150,n_out  BTC-USD 2015-08-03→2026-10-26  11.231   1.203      1.096  0.406    0.654 -0.381    -0.834  0.178   48    4.274  0.521  6.124  mantiene
+1  #2 HMA(n=50,banda=0.0) AND KELTNER(n=20,m=1.5,atr_n=14) AND TSM  BTC-USD 2015-08-03→2026-10-26  11.231   1.126      1.096  0.379    0.654 -0.496    -0.834  0.236  102    9.082  0.480  3.323  mantiene
+
+Cómo leerlo: estos datos no entraron en ninguna elección, así que aquí no hay sesgo de selección. Con pocas operaciones el resultado es ruidoso; lo que importa es que el Sharpe se mantenga claramente positivo y que el drawdown sea menor que el del buy & hold, no que iguale el del backtest.

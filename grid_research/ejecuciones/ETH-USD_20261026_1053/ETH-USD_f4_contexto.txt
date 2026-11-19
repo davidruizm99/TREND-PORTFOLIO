@@ -1,0 +1,7 @@
+instrumento y calendario: ETH-USD, calendario de 7 días (24/7), OJO: el portfolio espera L-V; ejecución EXEC_DELAY=2; 3221 filas, 2018-01-01 -> 2026-10-26
+periodo de diseño y OOS: IS 2018-01-01 -> 2023-04-12 · OOS 2023-04-13 -> 2026-10-26
+coste asumido: 10 pb por lado sobre cada cambio de tamaño (strategy_return viene neto)
+sistema y tipo de sleeve: '#5 EMA3X(f=5,m=120,s=65) OR MACD(f=16,s=300,sig=9,modo=senal) OR DONCHIAN | vol 0.35 | filtro -' · tamaño fraccional (columna size, redondeo 0.25); position = 1 cuando size > 0
+---
+convención: strategy_return[t] = size[t]·bh_return[t] − |Δsize|·coste, con size[t] = objetivo calculado al cierre de t−2
+validación: Sharpe IS 1.69 · OOS 1.12 · total 1.45 · CAGR 55.3% · MaxDD -34.8% · exposición media 38% · mediana de las 15 variantes 1.36 (Sharpe total) · DSR 1.00
